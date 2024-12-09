@@ -10,13 +10,13 @@ export abstract class WebViewBase {
   protected html: string = '';
   protected webview: vscode.WebviewPanel | undefined;
   protected disposables: vscode.Disposable[] = [];
-  protected veiwType: string;
+  protected viewType: string;
   protected title: string;
   protected resourceRoot: string;
   protected scriptPath?: string = undefined;
 
   protected constructor(viewType: string, title: string, resourceRoot: string) {
-    this.veiwType = viewType;
+    this.viewType = viewType;
     this.title = title;
     this.resourceRoot = resourceRoot;
   }
@@ -81,7 +81,7 @@ export abstract class WebViewBase {
   public displayWebView(showOptions: vscode.ViewColumn | { preserveFocus: boolean, viewColumn: vscode.ViewColumn },
                         reveal?: boolean, options?: vscode.WebviewPanelOptions & vscode.WebviewOptions) {
     if (this.webview === undefined) {
-      this.webview = vscode.window.createWebviewPanel(this.veiwType, this.title, showOptions, {
+      this.webview = vscode.window.createWebviewPanel(this.viewType, this.title, showOptions, {
         enableScripts: true,
         retainContextWhenHidden: true,
         ...(options || {}),

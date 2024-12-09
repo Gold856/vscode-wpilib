@@ -286,12 +286,12 @@ async function handleAfterTrusted(
           }
 
           if (prefs.getProjectYear() !== '2025') {
-            const importPersistantState = new PersistentFolderState(
+            const importPersistentState = new PersistentFolderState(
               'wpilib.2025persist',
               false,
               w.uri.fsPath
             );
-            if (importPersistantState.Value === false) {
+            if (importPersistentState.Value === false) {
               const upgradeResult = await vscode.window.showInformationMessage(
                 i18n(
                   'message',
@@ -309,7 +309,7 @@ async function handleAfterTrusted(
                   await gradle2020import.startWithProject(w.uri);
                 }
               } else if (upgradeResult?.title === "No, Don't ask again") {
-                importPersistantState.Value = true;
+                importPersistentState.Value = true;
               }
             }
             continue;
