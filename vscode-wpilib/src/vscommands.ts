@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExternalAPI } from 'vscode-wpilibapi';
 import { downloadDocs } from './docsapi';
-import { localize as i18n } from './locale';
+import { localize as i18n } from './utils/i18n/locale';
 import { logger } from './logger';
 import { requestTeamNumber } from './preferences';
 import { setDesktopEnabled } from './utils/project/generator';

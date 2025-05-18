@@ -18,7 +18,7 @@ import { DeployDebugAPI } from './deploydebugapi';
 import { ExecuteAPI } from './executor';
 import { activateJava } from './java/java';
 import { findJdkPath } from './jdkdetector';
-import { localize as i18n } from './locale';
+import { localize as i18n } from './utils/i18n/locale';
 import {
   closeLogger,
   getMainLogFile,
@@ -488,6 +488,7 @@ async function handleAfterTrusted(
     return externalApi;
   } catch (err) {
     logger.error('Error during extension activation', err);
+    return externalApi; // Add return statement for error path
   }
 }
 

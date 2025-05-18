@@ -2,8 +2,23 @@
 
 /* tslint:disable:prefer-conditional-expression */
 import { IErrorMessage, IIPCSendMessage, IPrintMessage, MessageType, ReceiveTypes, SendTypes } from 'wpilib-riolog';
-import { AnsiSegment, applyAnsiStyling, parseAnsiString } from '../ansi/ansiparser';
-import { checkResize, scrollImpl, sendMessage } from '../script/implscript';
+import { AnsiSegment, applyAnsiStyling, parseAnsiString } from './ansi/ansiparser';
+
+// Define these functions here, they'll be implemented in implscript.ts
+let checkResize: () => void;
+let scrollImpl: () => void;
+let sendMessage: (message: any) => void;
+
+// Function to set the implementation functions from implscript
+export function setImplFunctions(
+  checkResizeImpl: () => void,
+  scrollImplFunc: () => void,
+  sendMessageFunc: (message: any) => void
+) {
+  checkResize = checkResizeImpl;
+  scrollImpl = scrollImplFunc;
+  sendMessage = sendMessageFunc;
+}
 
 let paused = false;
 let discard = false;
@@ -628,22 +643,12 @@ export function addError(message: IErrorMessage) {
   }
 }
 
-let currentScreenHeight = 100;
-const TOOLBAR_HEIGHT = 60;
-
-export function checkResizeImpl(element: HTMLElement) {
-  const toolbar = document.getElementById('toolbar');
-  if (toolbar) {
-    currentScreenHeight = toolbar.offsetHeight;
-  } else {
-    currentScreenHeight = TOOLBAR_HEIGHT;
-  }
-
-  const allowedHeight = element.clientHeight - currentScreenHeight;
+export function checkResizeImpl() {
   const container = document.getElementById('log-container');
   if (container === null) {
     return;
   }
+  // Container height is managed through CSS
 }
 
 export function handleMessage(data: IIPCSendMessage | any): void {

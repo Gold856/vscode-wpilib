@@ -17,7 +17,7 @@ function checkErrorEqual(a: IErrorMessage, b: IErrorMessage): void {
 }
 
 function getBufferFromError(message: IErrorMessage): Buffer {
-  const buffer = new Buffer(65535);
+  const buffer = Buffer.alloc(65535);
   let count = 0;
   buffer.writeInt8(0, count);
   count++;
@@ -38,15 +38,15 @@ function getBufferFromError(message: IErrorMessage): Buffer {
 
   buffer.writeUInt16BE(message.details.length, count);
   count += 2;
-  count += buffer.write(message.details, count, undefined, 'utf8');
+  count += buffer.write(message.details, count);
 
   buffer.writeUInt16BE(message.location.length, count);
   count += 2;
-  count += buffer.write(message.location, count, undefined, 'utf8');
+  count += buffer.write(message.location, count);
 
   buffer.writeUInt16BE(message.callStack.length, count);
   count += 2;
-  count += buffer.write(message.callStack, count, undefined, 'utf8');
+  count += buffer.write(message.callStack, count);
 
   buffer.writeUInt16BE(count - 2, 0);
 
@@ -173,7 +173,7 @@ suite('Input Error Buffer Tests', () => {
         count++;
       });
       const buf = getBufferFromError(message);
-      const newBuf = new Buffer(buf.length * 2);
+      const newBuf = Buffer.alloc(buf.length * 2);
       buf.copy(newBuf, 0, 0, buf.length);
       buf.copy(newBuf, buf.length, 0, buf.length);
       const bufa = newBuf.slice(0, buf.length - 10);

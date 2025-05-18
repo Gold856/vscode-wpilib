@@ -11,7 +11,7 @@ const maxFrameSize = 100000;
 
 class DataStore {
   // 65536 is max length, plus 2 for the length itself, rounded to the nearest 256
-  public buf: Buffer = new Buffer(65792);
+  public buf: Buffer = Buffer.alloc(65792);
   public count: number = 0;
   public frameSize: number = maxFrameSize;
 }
@@ -165,7 +165,7 @@ export class RioConsole extends EventEmitter implements IRioConsole {
       socket.removeAllListeners();
       return;
     }
-    await new Promise((resolve, _) => {
+    await new Promise<void>((resolve, _) => {
       this.closeFunc = () => {
         socket.end();
         socket.destroy();

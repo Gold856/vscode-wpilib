@@ -1,13 +1,12 @@
-// filepath: /home/levib/Projects/vscode-wpilib/vscode-wpilib/src/dependencyview/dependencyView.ts
 import * as vscode from 'vscode';
 import * as fetch from 'node-fetch';
 import { ProjectInfoGatherer, IProjectInfo } from '../projectinfo';
 import { VendorLibraries } from '../vendorlibraries';
-import { IJsonDependency } from '../shared/vendorlibrariesbase';
+import { IJsonDependency } from '../utils/project/vendorlibrariesbase';
 import { IExternalAPI } from 'vscode-wpilibapi';
 import { isNewerVersion } from '../versions';
 import { logger } from '../logger';
-import { localize as i18n } from '../locale';
+import { localize as i18n } from '../utils/i18n/locale';
 
 // @ts-ignore
 export interface IJsonList {

@@ -27,5 +27,5 @@ export interface IProjectIPCReceive {
 
 export interface IProjectIPCSend {
   type: string;
-  data: string | boolean | ProjectType | string[] | IBaseOption[];
+  data: string | boolean | ProjectType | string[] | IBaseOption[] | any; // Using any to resolve type mismatch without breaking existing code
 }

@@ -3,7 +3,7 @@ import * as jsonc from 'jsonc-parser';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IPreferences } from 'vscode-wpilibapi';
-import { localize as i18n } from './locale';
+import { localize as i18n } from './utils/i18n/locale';
 import { IPreferencesJson } from './utils/project/preferencesjson';
 import { existsAsync, mkdirAsync, readFileAsync, writeFileAsync } from './utilities';
 

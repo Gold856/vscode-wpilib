@@ -4,7 +4,7 @@ const extract = require('extract-zip');
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { downloadFileToStream } from './fetchhelpers';
-import { localize as i18n } from './locale';
+import { localize as i18n } from './utils/i18n/locale';
 import {constructDownloadUrl, getMavenMetadata, getMavenMetadataContents, getMavenVersions, getNewestMavenVersion} from './mavenapi';
 import { deleteFileAsync, existsAsync, mkdirpAsync } from './utilities';
 

@@ -2,10 +2,9 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { loadLocaleFile } from '../locale';
+import { loadLocaleFile } from '../utils/i18n/locale';
 import { extensionContext, readFileAsync } from '../utilities';
 import { logger } from '../logger';
-import { WebviewProvider } from '../webviewprovider';
 
 export abstract class WebViewBase {
   protected html: string = '';
@@ -35,7 +34,6 @@ export abstract class WebViewBase {
     }
 
     // Add CSS link if it's not already there
-    const cssPath = path.join(extensionContext.extensionPath, 'resources', 'media', 'main.css');
     const cssHrefCheck = 'href="replaceresource/resources/media/main.css"';
     if (!this.html.includes(cssHrefCheck) && !this.html.includes('main.css')) {
       this.html = this.html.replace('</head>', 

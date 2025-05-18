@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import {
   IErrorMessage, IIPCReceiveMessage, IIPCSendMessage, IPrintMessage, IRioConsole, IRioConsoleProvider,
-  IWindowProvider, IWindowView, MessageType, RioConsole
+  IWindowProvider, IWindowView, MessageType, RioConsole, SendTypes
 } from 'wpilib-riolog';
 import { readFileAsync } from '../utilities';
 
@@ -49,9 +49,6 @@ export class RioLogWindowView extends EventEmitter implements IWindowView {
     vscode.window.onDidChangeActiveColorTheme(() => {
       this.sendThemeColors();
     }, null, this.disposables);
-
-    // Send welcome message
-    this.sendWelcomeMessage();
   }
 
   private sendThemeColors() {
@@ -67,29 +64,6 @@ export class RioLogWindowView extends EventEmitter implements IWindowView {
     this.webview.webview.postMessage({ 
       type: 'themeColors', 
       message: colors 
-    });
-  }
-
-  private sendWelcomeMessage() {
-    const welcomeMessage: IPrintMessage = {
-      line: '\u001b[1m\u001b[36m=== WPILib RioLog Started ===\u001b[0m\n' +
-        '\u001b[32mWaiting for robot connection...\u001b[0m\n' +
-        '\u001b[33mTIPS:\u001b[0m\n' +
-        '• \u001b[0mUse \u001b[1mSet\u001b[0m button to change team number\n' +
-        '• \u001b[0mClick on errors/warnings to expand details\n' +
-        '• \u001b[0mUse search box to filter messages\n' +
-        '• \u001b[0mToggle auto-scrolling for viewing older logs\n' +
-        '• \u001b[0mSave logs to file for later analysis',
-      messageType: MessageType.Print,
-      seqNumber: 0,
-      timestamp: Date.now() / 1000
-    };
-
-    this.postMessage({
-      message: welcomeMessage,
-      type: 3,
-    }).catch(err => {
-      console.error('Failed to send welcome message:', err);
     });
   }
 
@@ -153,23 +127,29 @@ export class RioLogHTMLProvider implements IHTMLProvider {
   }
 
   public getHTML(webview: vscode.Webview): string {
-    const onDiskPath = vscode.Uri.file(path.join(this.resourceRoot, 'dist', 'riologpage.js'));
+    // Get paths to script and CSS
+    const scriptPath = vscode.Uri.file(path.join(this.resourceRoot, '..', 'resources', 'dist', 'riologpage.js'));
     const cssPath = vscode.Uri.file(path.join(this.resourceRoot, '..', 'resources', 'media', 'main.css'));
 
-    const scriptResourcePath = webview.asWebviewUri(onDiskPath);
-    const cssResourcePath = webview.asWebviewUri(cssPath);
+    // Convert to webview URIs
+    const scriptUri = webview.asWebviewUri(scriptPath);
+    const cssUri = webview.asWebviewUri(cssPath);
 
     let html = this.html!;
     
     // Add CSS link
     html = html.replace('</head>', 
-      `<link rel="stylesheet" href="${cssResourcePath}" />\r\n</head>`);
+      `<link rel="stylesheet" href="${cssUri}" />\r\n</head>`);
     
-    // Add script
-    html += '\r\n<script src="';
-    html += scriptResourcePath.toString();
-    html += '">\r\n';
-    html += '\r\n</script>\r\n';
+    // Add script with error handling
+    html = html.replace('</body>', 
+      `<script>
+        window.addEventListener('error', (event) => {
+          console.error('Error in RioLog script:', event.error);
+        });
+      </script>
+      <script src="${scriptUri}"></script>
+      </body>`);
 
     return html;
   }

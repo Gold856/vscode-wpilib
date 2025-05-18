@@ -1,338 +1,142 @@
-import * as fs from 'fs';
-const glob = require('glob');
+'use strict';
+
 import * as path from 'path';
-import { localize as i18n } from '../locale';
-import { logger } from '../logger';
-import { copyFileAsync, mkdirpAsync, ncpAsync, readdirAsync, readFileAsync, writeFileAsync } from '../utilities';
-import { setExecutePermissions } from './permissions';
+import { logger } from '../../logger';
+import * as pathUtils from './pathUtils';
+import * as genUtils from './projectGeneratorUtils';
 
-type CopyCallback = (srcFolder: string, rootFolder: string) => Promise<boolean>;
+export type CopyCallback = genUtils.CopyCallback;
 
-export async function generateCopyCpp(resourcesFolder: string, fromTemplateFolder: string | CopyCallback, fromTemplateTestFolder: string | undefined,
-                                      fromGradleFolder: string, toFolder: string, directGradleImport: boolean, extraVendordeps: string[]):
-                                      Promise<boolean> {
+export async function generateCopyCpp(
+  resourcesFolder: string, 
+  fromTemplateFolder: string | CopyCallback, 
+  fromTemplateTestFolder: string | undefined,
+  fromGradleFolder: string, 
+  toFolder: string, 
+  directGradleImport: boolean, 
+  extraVendordeps: string[]
+): Promise<boolean> {
   try {
-    const existingFiles = await readdirAsync(toFolder);
-    if (existingFiles.length > 0) {
-      logger.warn('folder not empty');
+    // Check if destination folder is empty
+    if (!await pathUtils.isFolderEmpty(toFolder)) {
+      logger.warn('Destination folder is not empty');
       return false;
     }
 
-    let codePath = path.join(toFolder, 'src', 'main');
-    const testPath = path.join(toFolder, 'src', 'test');
-    if (directGradleImport) {
-      codePath = path.join(toFolder, 'src');
-    }
-
-
-    const gradleRioFrom = '###GRADLERIOREPLACE###';
-
+    // Get project paths
+    const { codePath, testPath } = pathUtils.getProjectPaths(toFolder, '', directGradleImport);
+    
+    // Get the GradleRIO version
     const grRoot = path.dirname(fromGradleFolder);
-
-    const grVersionFile = path.join(grRoot, 'version.txt');
-
-    const grVersionTo = (await readFileAsync(grVersionFile, 'utf8')).trim();
-
-    if (typeof fromTemplateFolder === 'string') {
-      await ncpAsync(fromTemplateFolder, codePath);
-    } else {
-      await fromTemplateFolder(codePath, toFolder);
-    }
+    const gradleRioVersion = await genUtils.getGradleRioVersion(grRoot);
+    
+    // Copy template folders
+    await genUtils.copyTemplateFolder(fromTemplateFolder, codePath, toFolder);
     if (fromTemplateTestFolder !== undefined) {
-      await ncpAsync(fromTemplateTestFolder, testPath);
-    }
-    await ncpAsync(fromGradleFolder, toFolder, {
-      filter: (cf): boolean => {
-        const rooted = path.relative(fromGradleFolder, cf);
-        if (rooted.startsWith('bin') || rooted.indexOf('.project') >= 0) {
-          return false;
-        }
-        return true;
-      },
-    });
-    await ncpAsync(path.join(grRoot, 'shared'), toFolder, {
-      filter: (cf): boolean => {
-        const rooted = path.relative(fromGradleFolder, cf);
-        if (rooted.startsWith('bin') || rooted.indexOf('.project') >= 0) {
-          return false;
-        }
-        return true;
-      },
-    });
-
-    await setExecutePermissions(path.join(toFolder, 'gradlew'));
-
-    const buildgradle = path.join(toFolder, 'build.gradle');
-
-    await new Promise<void>((resolve, reject) => {
-      fs.readFile(buildgradle, 'utf8', (err, dataIn) => {
-        if (err) {
-          resolve();
-        } else {
-          const dataOut = dataIn.replace(new RegExp(gradleRioFrom, 'g'), grVersionTo);
-          fs.writeFile(buildgradle, dataOut, 'utf8', (err1) => {
-            if (err1) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        }
-      });
-    });
-
-    if (!directGradleImport) {
-      const deployDir = path.join(toFolder, 'src', 'main', 'deploy');
-
-      await mkdirpAsync(deployDir);
-
-      await writeFileAsync(path.join(deployDir, 'example.txt'), i18n('generator', ['generateCppDeployHint',
-        `Files placed in this directory will be deployed to the RoboRIO into the
-  'deploy' directory in the home folder. Use the 'frc::filesystem::GetDeployDirectory'
-  function from the 'frc/Filesystem.h' header to get a proper path relative to the deploy
-  directory.` ]));
+      await genUtils.copyTemplateFolder(fromTemplateTestFolder, testPath, toFolder);
     }
 
-    const vendorDir = path.join(toFolder, 'vendordeps');
-    await mkdirpAsync(vendorDir);
+    // Setup project structure
+    await genUtils.setupProjectStructure(fromGradleFolder, toFolder, grRoot);
+    
+    // Update gradle file with correct version
+    const buildGradlePath = pathUtils.getBuildGradlePath(toFolder);
+    await genUtils.updateGradleRioVersion(buildGradlePath, gradleRioVersion);
 
-    const commandName = 'WPILibNewCommands.json';
-    const vendorFile = path.join(path.dirname(resourcesFolder), 'vendordeps', commandName);
-    await copyFileAsync(vendorFile, path.join(vendorDir, commandName));
+    // Setup deploy directory
+    await genUtils.setupDeployDirectory(toFolder, directGradleImport, false);
 
-    for (const vendordep of extraVendordeps) {
-      if (vendordep === 'romi') {
-        const romiVendordepName = 'RomiVendordep.json';
-        const romiVendordepFile = path.join(path.dirname(resourcesFolder), 'vendordeps', romiVendordepName);
-        await copyFileAsync(romiVendordepFile, path.join(vendorDir, romiVendordepName));
-      } else if (vendordep === 'xrp') {
-        const xrpVendordepName = 'XRPVendordep.json';
-        const xrpVendordepFile = path.join(path.dirname(resourcesFolder), 'vendordeps', xrpVendordepName);
-        await copyFileAsync(xrpVendordepFile, path.join(vendorDir, xrpVendordepName));
-      }
-    }
+    // Setup vendor dependencies
+    await genUtils.setupVendorDeps(resourcesFolder, toFolder, extraVendordeps);
 
     return true;
   } catch (e) {
-    logger.error('Project creation failure', e);
+    logger.error('C++ project creation failure', e);
     return false;
   }
 }
 
-export async function generateCopyJava(resourcesFolder: string, fromTemplateFolder: string | CopyCallback, fromTemplateTestFolder: string | undefined,
-                                       fromGradleFolder: string, toFolder: string, robotClassTo: string, copyRoot: string,
-                                       directGradleImport: boolean, extraVendordeps: string[], packageReplaceString?: string | undefined):
-                                       Promise<boolean> {
+export async function generateCopyJava(
+  resourcesFolder: string, 
+  fromTemplateFolder: string | CopyCallback, 
+  fromTemplateTestFolder: string | undefined,
+  fromGradleFolder: string, 
+  toFolder: string, 
+  robotClassTo: string, 
+  copyRoot: string,
+  directGradleImport: boolean, 
+  extraVendordeps: string[], 
+  packageReplaceString?: string
+): Promise<boolean> {
   try {
-    const existingFiles = await readdirAsync(toFolder);
-    if (existingFiles.length > 0) {
+    // Check if destination folder is empty
+    if (!await pathUtils.isFolderEmpty(toFolder)) {
+      logger.warn('Destination folder is not empty');
       return false;
     }
 
-    const rootCodePath = path.join(toFolder, 'src', 'main', 'java');
-    const rootTestPath = path.join(toFolder, 'src', 'test', 'java');
-    let codePath = path.join(rootCodePath, copyRoot);
-    const testPath = path.join(rootTestPath, copyRoot);
-    if (directGradleImport) {
-      codePath = path.join(toFolder, 'src');
-    }
-
-    if (typeof fromTemplateFolder === 'string') {
-      await ncpAsync(fromTemplateFolder, codePath);
-    } else {
-      await fromTemplateFolder(codePath, toFolder);
-    }
-    if (fromTemplateTestFolder !== undefined) {
-      await ncpAsync(fromTemplateTestFolder, testPath);
-    }
-
-    const files = await new Promise<string[]>((resolve, reject) => {
-      glob('**/*{.java,.gradle}', {
-        cwd: codePath,
-        nodir: true,
-        nomount: true,
-      },  (err: Error | null, matches: string[]) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(matches);
-        }
-      });
-    });
-
-    // Package replace inside the template
-
-    const replacePackageFrom = 'edu\\.wpi\\.first\\.wpilibj\\.(?:examples|templates)\\..+?(?=;|\\.)';
-    const replacePackageTo = 'frc.robot';
-
-    const robotClassFrom = '###ROBOTCLASSREPLACE###';
-    const gradleRioFrom = '###GRADLERIOREPLACE###';
-
+    // Get project paths
+    const { codePath, testPath } = pathUtils.getProjectPaths(toFolder, copyRoot, directGradleImport);
+    
+    // Get the GradleRIO version
     const grRoot = path.dirname(fromGradleFolder);
-
-    const grVersionFile = path.join(grRoot, 'version.txt');
-
-    const grVersionTo = (await readFileAsync(grVersionFile, 'utf8')).trim();
-
-    const promiseArray: Promise<void>[] = [];
-
-    for (const f of files) {
-      const file = path.join(codePath, f);
-      promiseArray.push(new Promise<void>((resolve, reject) => {
-        fs.readFile(file, 'utf8', (err, dataIn) => {
-          if (err) {
-            reject(err);
-          } else {
-            let dataOut = dataIn.replace(new RegExp(replacePackageFrom, 'g'), replacePackageTo);
-            if (packageReplaceString !== undefined) {
-              dataOut = dataOut.replace(new RegExp(packageReplaceString, 'g'), replacePackageTo);
-            }
-            fs.writeFile(file, dataOut, 'utf8', (err1) => {
-              if (err1) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          }
-        });
-      }));
-    }
-
+    const gradleRioVersion = await genUtils.getGradleRioVersion(grRoot);
+    
+    // Copy template folders
+    await genUtils.copyTemplateFolder(fromTemplateFolder, codePath, toFolder);
     if (fromTemplateTestFolder !== undefined) {
-      const testFiles = await new Promise<string[]>((resolve, reject) => {
-        glob('**/*{.java,.gradle}', {
-          cwd: testPath,
-          nodir: true,
-          nomount: true,
-        },  (err: Error | null, matches: string[]) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(matches);
-          }
-        });
-      });
-
-      for (const f of testFiles) {
-        const file = path.join(testPath, f);
-        promiseArray.push(new Promise<void>((resolve, reject) => {
-          fs.readFile(file, 'utf8', (err, dataIn) => {
-            if (err) {
-              reject(err);
-            } else {
-              let dataOut = dataIn.replace(new RegExp(replacePackageFrom, 'g'), replacePackageTo);
-              if (packageReplaceString !== undefined) {
-                dataOut = dataOut.replace(new RegExp(packageReplaceString, 'g'), replacePackageTo);
-              }
-              fs.writeFile(file, dataOut, 'utf8', (err1) => {
-                if (err1) {
-                  reject(err);
-                } else {
-                  resolve();
-                }
-              });
-            }
-          });
-        }));
-      }
+      await genUtils.copyTemplateFolder(fromTemplateTestFolder, testPath, toFolder);
     }
 
-    await Promise.all(promiseArray);
-
-    await ncpAsync(fromGradleFolder, toFolder, {
-      filter: (cf): boolean => {
-        const rooted = path.relative(fromGradleFolder, cf);
-        if (rooted.startsWith('bin') || rooted.indexOf('.project') >= 0) {
-          return false;
-        }
-        return true;
-      },
-    });
-    await ncpAsync(path.join(grRoot, 'shared'), toFolder, {
-      filter: (cf): boolean => {
-        const rooted = path.relative(fromGradleFolder, cf);
-        if (rooted.startsWith('bin') || rooted.indexOf('.project') >= 0) {
-          return false;
-        }
-        return true;
-      },
-    });
-
-    await setExecutePermissions(path.join(toFolder, 'gradlew'));
-
-    const buildgradle = path.join(toFolder, 'build.gradle');
-
-    await new Promise<void>((resolve, reject) => {
-      fs.readFile(buildgradle, 'utf8', (err, dataIn) => {
-        if (err) {
-          resolve();
-        } else {
-          const dataOut = dataIn.replace(new RegExp(robotClassFrom, 'g'), robotClassTo)
-            .replace(new RegExp(gradleRioFrom, 'g'), grVersionTo);
-          fs.writeFile(buildgradle, dataOut, 'utf8', (err1) => {
-            if (err1) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        }
-      });
-    });
-
-    if (!directGradleImport) {
-      const deployDir = path.join(toFolder, 'src', 'main', 'deploy');
-
-      await mkdirpAsync(deployDir);
-
-      await writeFileAsync(path.join(deployDir, 'example.txt'), i18n('generator', ['generateJavaDeployHint',
-        `Files placed in this directory will be deployed to the RoboRIO into the
-'deploy' directory in the home folder. Use the 'Filesystem.getDeployDirectory' wpilib function
-to get a proper path relative to the deploy directory.` ]));
+    // Find files that need template processing
+    const files = await genUtils.findMatchingFiles(codePath);
+    
+    // Create replacements map
+    const replacements = new Map<string | RegExp, string>();
+    replacements.set(new RegExp(genUtils.ReplacementPatterns.JAVA_PACKAGE_PATTERN, 'g'), 'frc.robot');
+    if (packageReplaceString !== undefined) {
+      replacements.set(new RegExp(packageReplaceString, 'g'), 'frc.robot');
+    }
+    
+    // Process template files
+    await genUtils.processTemplateFiles(files, codePath, replacements);
+    
+    // Process test files if they exist
+    if (fromTemplateTestFolder !== undefined) {
+      const testFiles = await genUtils.findMatchingFiles(testPath);
+      await genUtils.processTemplateFiles(testFiles, testPath, replacements);
     }
 
-    const vendorDir = path.join(toFolder, 'vendordeps');
-    await mkdirpAsync(vendorDir);
-    const commandName = 'WPILibNewCommands.json';
-    const vendorFile = path.join(path.dirname(resourcesFolder), 'vendordeps', commandName);
-    await copyFileAsync(vendorFile, path.join(vendorDir, commandName));
+    // Setup project structure
+    await genUtils.setupProjectStructure(fromGradleFolder, toFolder, grRoot);
+    
+    // Update gradle file with correct version and robot class
+    const buildGradlePath = pathUtils.getBuildGradlePath(toFolder);
+    await pathUtils.updateFileContents(buildGradlePath, (content) => {
+      return content
+        .replace(new RegExp(genUtils.ReplacementPatterns.ROBOT_CLASS_MARKER, 'g'), robotClassTo)
+        .replace(new RegExp(genUtils.ReplacementPatterns.GRADLE_RIO_MARKER, 'g'), gradleRioVersion);
+    });
 
-    for (const vendordep of extraVendordeps) {
-      if (vendordep === 'romi') {
-        const romiVendordepName = 'RomiVendordep.json';
-        const romiVendordepFile = path.join(path.dirname(resourcesFolder), 'vendordeps', romiVendordepName);
-        await copyFileAsync(romiVendordepFile, path.join(vendorDir, romiVendordepName));
-      } else if (vendordep === 'xrp') {
-        const xrpVendordepName = 'XRPVendordep.json';
-        const xrpVendordepFile = path.join(path.dirname(resourcesFolder), 'vendordeps', xrpVendordepName);
-        await copyFileAsync(xrpVendordepFile, path.join(vendorDir, xrpVendordepName));
-      }
-    }
+    // Setup deploy directory
+    await genUtils.setupDeployDirectory(toFolder, directGradleImport, true);
+
+    // Setup vendor dependencies
+    await genUtils.setupVendorDeps(resourcesFolder, toFolder, extraVendordeps);
 
     return true;
   } catch (e) {
-    logger.error('Project creation failure', e);
+    logger.error('Java project creation failure', e);
     return false;
   }
 }
 
 export function setDesktopEnabled(buildgradle: string, setting: boolean): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    fs.readFile(buildgradle, 'utf8', (err, dataIn) => {
-      if (err) {
-        resolve();
-      } else {
-        const dataOut = dataIn.replace(/def\s+includeDesktopSupport\s*=\s*(true|false)/gm,
-          `def includeDesktopSupport = ${setting ? 'true' : 'false'}`);
-        fs.writeFile(buildgradle, dataOut, 'utf8', (err1) => {
-          if (err1) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      }
-    });
-  });
+  return pathUtils.updateFileContents(
+    buildgradle,
+    (content) => content.replace(
+      /def\s+includeDesktopSupport\s*=\s*(true|false)/gm,
+      `def includeDesktopSupport = ${setting ? 'true' : 'false'}`
+    )
+  ).then(() => {});
 }

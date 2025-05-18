@@ -3,13 +3,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExampleTemplateAPI } from 'vscode-wpilibapi';
-import { localize as i18n } from '../locale';
-import { setDesktopEnabled } from '../shared/generator';
+import { localize as i18n } from '../utils/i18n/locale';
+import { setDesktopEnabled } from '../utils/project/generator';
 import { extensionContext, promptForProjectOpen } from '../utilities';
 import { IProjectIPCData, IProjectIPCReceive, IProjectIPCSend, ProjectType } from './pages/projectcreatorpagetypes';
 import { WebViewBase } from './webviewbase';
 import { Uri } from '../vscodeshim';
-import { WebviewProvider } from '../webviewprovider';
 
 export class ProjectCreator extends WebViewBase {
   public static async Create(exampleTemplateApi: IExampleTemplateAPI, resourceRoot: string): Promise<ProjectCreator> {
@@ -97,7 +96,6 @@ export class ProjectCreator extends WebViewBase {
   private async handleProjectType() {
     // Instead of showing a QuickPick, return the list of languages directly to the UI
     const templateLanguages = this.exampleTemplateApi.getLanguages(true);
-    const exampleLanguages = this.exampleTemplateApi.getLanguages(false);
     
     await this.postMessage({
       data: templateLanguages,
@@ -156,29 +154,4 @@ export class ProjectCreator extends WebViewBase {
     // Include the 'projectcreator' domain for localization
     await this.loadWebpage(htmlPath, scriptPath, ['projectcreator']);
   }
-}
-
-async function createProjectUI(extensionResourceLocation: string): Promise<vscode.WebviewPanel> {
-  const panel = vscode.window.createWebviewPanel(
-    'wpilibprojectcreator',
-    i18n('title', 'New Project Creator'),
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true,
-      retainContextWhenHidden: true,
-      localResourceRoots: [
-        vscode.Uri.file(extensionResourceLocation),
-        vscode.Uri.file(path.join(extensionResourceLocation, 'media')),
-      ],
-    }
-  );
-
-  // Use WebviewProvider to load HTML with proper styling
-  panel.webview.html = await WebviewProvider.getWebviewContent(
-    vscode.Uri.file(extensionResourceLocation),
-    'resources/webviews/projectcreator.html',
-    panel.webview
-  );
-  
-  return panel;
 }

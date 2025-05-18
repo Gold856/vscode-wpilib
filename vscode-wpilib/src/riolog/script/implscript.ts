@@ -1,7 +1,7 @@
 'use strict';
 
 import { IIPCReceiveMessage, IIPCSendMessage } from 'wpilib-riolog';
-import { checkResizeImpl, handleMessage } from '../shared/sharedscript';
+import { setImplFunctions, handleMessage } from '../sharedscript';
 
 interface IVsCodeApi {
   postMessage(message: IIPCReceiveMessage, to: string): void;
@@ -11,12 +11,12 @@ declare function acquireVsCodeApi(): IVsCodeApi;
 
 const vscode = acquireVsCodeApi();
 
-export function checkResize() {
-  checkResizeImpl(document.documentElement);
-  
+export function checkResize(): void {
+  // Get required elements
   const toolbar = document.getElementById('toolbar');
   const logContainer = document.getElementById('log-container');
   
+  // Apply dynamic max-height calculation if both elements exist
   if (toolbar && logContainer) {
     logContainer.style.maxHeight = `calc(100vh - ${toolbar.offsetHeight}px)`;
   }
@@ -32,6 +32,9 @@ export function scrollImpl() {
 export function sendMessage(message: IIPCReceiveMessage) {
   vscode.postMessage(message, '*');
 }
+
+// Register the implementation functions with the shared module
+setImplFunctions(checkResize, scrollImpl, sendMessage);
 
 window.addEventListener('message', (event) => {
   const data: IIPCSendMessage | any = event.data;

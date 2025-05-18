@@ -15,7 +15,6 @@ let projectType: ProjectType = ProjectType.Template;
 let language = '';
 let base = '';
 let currentStep = 1;
-let totalSteps = 4;
 let languages: string[] = [];
 let bases: string[] = [];
 
