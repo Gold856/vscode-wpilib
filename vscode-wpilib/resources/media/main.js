@@ -271,6 +271,27 @@
         vscode.postMessage({ type: 'updateall' });
       });
 
+    document
+      .getElementById('install-url-action')
+      ?.addEventListener('click', () => {
+        const urlInput = /** @type {HTMLInputElement | null} */ (document.getElementById('url-input'));
+        if (urlInput && urlInput.value.trim()) {
+          vscode.postMessage({ 
+            type: 'installFromUrl', 
+            url: urlInput.value.trim() 
+          });
+          urlInput.value = '';
+        }
+      });
+
+    document
+      .getElementById('url-input')
+      ?.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          document.getElementById('install-url-action')?.click();
+        }
+      });
+
     // Listen for focus events
     window.addEventListener('blur', () => {
       vscode.postMessage({ type: 'blur' });
