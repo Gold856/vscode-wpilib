@@ -8,15 +8,6 @@ import { isNewerVersion } from '../versions';
 import { logger } from '../logger';
 import { localize as i18n } from '../utils/i18n/locale';
 
-import * as vscode from 'vscode';
-import * as fetch from 'node-fetch';
-import { ProjectInfoGatherer, IProjectInfo } from '../projectinfo';
-import { VendorLibraries } from '../vendorlibraries';
-import { IJsonDependency } from '../utils/project/vendorlibrariesbase';
-import { IExternalAPI } from 'vscode-wpilibapi';
-import { isNewerVersion } from '../versions';
-import { logger } from '../logger';
-import { localize as i18n } from '../utils/i18n/locale';
 export interface IJsonList {
   path: string;
   name: string;

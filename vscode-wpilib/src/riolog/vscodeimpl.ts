@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import {
   IErrorMessage, IIPCReceiveMessage, IIPCSendMessage, IPrintMessage, IRioConsole, IRioConsoleProvider,
-  IWindowProvider, IWindowView, MessageType, RioConsole, SendTypes
+  IWindowProvider, IWindowView, RioConsole
 } from 'wpilib-riolog';
 import { readFileAsync } from '../utilities';
 
