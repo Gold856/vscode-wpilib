@@ -534,12 +534,12 @@
     "homepage": "https://github.com/wpilibsuite/vscode-wpilib",
     "scripts": {
         "vscode:prepublish": "npm run package",
-        "compile": "webpack",
-        "watch": "webpack --watch",
-        "package": "webpack --mode production --devtool hidden-source-map",
+        "compile": "NODE_ENV=production webpack",
+        "watch": "NODE_ENV=development webpack --watch",
+        "package": "NODE_ENV=production webpack",
         "compile-tests": "tsc -p . --outDir out",
         "watch-tests": "tsc -p . -w --outDir out",
-        "webpack-watch": "webpack --mode development --watch",
+        "webpack-watch": "NODE_ENV=development webpack --watch --mode development",
         "pretest": "npm run compile-tests && npm run compile && npm run lint",
         "lint": "eslint src",
         "test": "vscode-test"
