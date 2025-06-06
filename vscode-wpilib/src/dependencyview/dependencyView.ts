@@ -87,6 +87,33 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
+    const prefs = this.externalApi.getPreferencesAPI().getPreferences(this.wp);
+    const projectYear = prefs.getProjectYear();
+    const isWPILib = prefs.getIsWPILibProject && prefs.getIsWPILibProject();
+    if (projectYear === 'none' || !isWPILib) {
+      webviewView.webview.html = `
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WPILib Vendor Dependencies</title>
+            <link rel="stylesheet" href="${webviewView.webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'media', 'main.css'))}">
+            <link rel="stylesheet" href="${webviewView.webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'media', 'icons.css'))}" id="vscode-codicon-stylesheet">
+          </head>
+          <body>
+            <div class="error-content" style="max-width: 500px; margin: 48px auto; text-align: center;">
+              <span class="codicon codicon-warning" style="font-size: 32px; display: block; margin-bottom: 16px;"></span>
+              <b>This is not a WPILib project.</b><br/>
+              Vendor dependency management is only available for WPILib projects.<br/>
+              <br/>
+              To use vendor dependencies, open a WPILib project or create a new one from the WPILib extension.
+            </div>
+          </body>
+        </html>
+      `;
+      return;
+    }
+
     if (this.projectInfo) {
       this.viewInfo = await this.projectInfo.getViewInfo();
     }
@@ -753,8 +780,8 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
           }
           #url-input {
             flex: 1;
-            min-width: 150px;
-            max-width: calc(100% - 80px);
+            min-width: 50px;
+            max-width: 100%;
           }
           #install-url-action {
             width: 72px;

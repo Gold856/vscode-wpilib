@@ -74,6 +74,16 @@ export class VendorLibraries extends VendorLibrariesBase {
       }
     }
 
+    const prefs = this.externalApi.getPreferencesAPI().getPreferences(workspace);
+    const projectYear = prefs.getProjectYear();
+    const isWPILib = prefs.getIsWPILibProject && prefs.getIsWPILibProject();
+    if (projectYear === 'none' || !isWPILib) {
+      vscode.window.showErrorMessage(
+        'This is not a WPILib project. Vendor dependency management is only available for WPILib projects. To use vendor dependencies, open a WPILib project or create a new one from the WPILib extension.'
+      );
+      return;
+    }
+
     // Pre-load dependencies to warm the cache.
     // These run in the background and do not delay the QuickPick.
     // Errors are logged and do not prevent the UI from showing.
@@ -327,6 +337,17 @@ export class VendorLibraries extends VendorLibrariesBase {
   }
 
   private async offlineNew(workspace: vscode.WorkspaceFolder): Promise<void> {
+    // --- WPILib project check ---
+    const prefs = this.externalApi.getPreferencesAPI().getPreferences(workspace);
+    const projectYear = prefs.getProjectYear();
+    const isWPILib = prefs.getIsWPILibProject && prefs.getIsWPILibProject();
+    if (projectYear === 'none' || !isWPILib) {
+      vscode.window.showErrorMessage(
+        'This is not a WPILib project. Vendor dependency management is only available for WPILib projects. To use vendor dependencies, open a WPILib project or create a new one from the WPILib extension.'
+      );
+      return;
+    }
+    // --- end WPILib project check ---
     const installedDeps = await this.getInstalledDependencies(workspace);
 
     const availableDeps = await this.getCachedHomeDirDeps();
@@ -371,6 +392,17 @@ export class VendorLibraries extends VendorLibrariesBase {
   }
 
   private async onlineNew(workspace: vscode.WorkspaceFolder): Promise<void> {
+    // --- WPILib project check ---
+    const prefs = this.externalApi.getPreferencesAPI().getPreferences(workspace);
+    const projectYear = prefs.getProjectYear();
+    const isWPILib = prefs.getIsWPILibProject && prefs.getIsWPILibProject();
+    if (projectYear === 'none' || !isWPILib) {
+      vscode.window.showErrorMessage(
+        'This is not a WPILib project. Vendor dependency management is only available for WPILib projects. To use vendor dependencies, open a WPILib project or create a new one from the WPILib extension.'
+      );
+      return;
+    }
+    // --- end WPILib project check ---
     const result = await vscode.window.showInputBox({
       ignoreFocusOut: true,
       placeHolder: i18n('message', 'Enter a vendor file URL (get from vendor)'),
