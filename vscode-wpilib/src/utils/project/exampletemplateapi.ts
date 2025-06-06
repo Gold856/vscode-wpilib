@@ -1,4 +1,4 @@
-'use scrict';
+'use strict';
 
 import * as path from 'path';
 import { mkdirpAsync, readFileAsync, writeFileAsync } from '../../utilities';

@@ -1,4 +1,4 @@
-'use scrict';
+'use strict';
 
 import * as jsonc from 'jsonc-parser';
 import { localize as i18n } from '../i18n/locale';
