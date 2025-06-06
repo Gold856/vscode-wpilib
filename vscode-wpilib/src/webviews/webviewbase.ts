@@ -1,10 +1,11 @@
 'use strict';
 
+import { readFile } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { loadLocaleFile } from '../utils/i18n/locale';
-import { extensionContext, readFileAsync } from '../utilities';
 import { logger } from '../logger';
+import { extensionContext } from '../utilities';
+import { loadLocaleFile } from '../utils/i18n/locale';
 
 export abstract class WebViewBase {
   protected html: string = '';
@@ -23,7 +24,7 @@ export abstract class WebViewBase {
 
   public async loadWebpage(htmlPath: string, scriptPath?: string, localeDomains?: string[]): Promise<void> {
     try {
-      this.html = await readFileAsync(htmlPath, 'utf8');
+      this.html = await readFile(htmlPath, 'utf8');
     } catch (err) {
       logger.error('Failed to read HTML file', err);
       return;

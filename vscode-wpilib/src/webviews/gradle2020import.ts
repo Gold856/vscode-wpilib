@@ -1,14 +1,15 @@
 'use strict';
 
 import * as fs from 'fs';
+import { mkdir, readFile, writeFile } from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { extensionContext, promptForProjectOpen } from '../utilities';
 import { localize as i18n } from '../utils/i18n/locale';
 import { generateCopyCpp, generateCopyJava, setDesktopEnabled } from '../utils/project/generator';
 import { ImportUpdate } from '../utils/project/importupdater';
 import { IPreferencesJson } from '../utils/project/preferencesjson';
-import { existsAsync, extensionContext, mkdirpAsync, promptForProjectOpen, readFileAsync, writeFileAsync } from '../utilities';
 import { IGradle2020IPCData, IGradle2020IPCReceive, IGradle2020IPCSend } from './pages/gradle2020importpagetypes';
 import { WebViewBase } from './webviewbase';
 
@@ -83,10 +84,12 @@ export class Gradle2020Import extends WebViewBase {
 
     let teamNumber: string | undefined;
 
-    if (await existsAsync(wpilibJsonFile)) {
-      const wpilibJsonFileContents = await readFileAsync(wpilibJsonFile, 'utf8');
+    try {
+      const wpilibJsonFileContents = await readFile(wpilibJsonFile, 'utf8');
       const wpilibJsonFileParsed = JSON.parse(wpilibJsonFileContents) as IPreferencesJson;
       teamNumber = wpilibJsonFileParsed.teamNumber.toString(10);
+    } catch {
+      // File doesn't exist, ignore
     }
 
     this.onLoad = async () => {
@@ -170,9 +173,8 @@ export class Gradle2020Import extends WebViewBase {
     const wpilibJsonFile = path.join(oldProjectPath, '.wpilib', 'wpilib_preferences.json');
 
     let cpp = true;
-
-    if (await existsAsync(wpilibJsonFile)) {
-      const wpilibJsonFileContents = await readFileAsync(wpilibJsonFile, 'utf8');
+    try {
+      const wpilibJsonFileContents = await readFile(wpilibJsonFile, 'utf8');
       const wpilibJsonFileParsed = JSON.parse(wpilibJsonFileContents) as IPreferencesJson;
       if (wpilibJsonFileParsed.currentLanguage === 'cpp') {
         cpp = true;
@@ -184,7 +186,7 @@ export class Gradle2020Import extends WebViewBase {
         });
         return;
       }
-    } else {
+    } catch {
       // Error
       await vscode.window.showErrorMessage(i18n('message', 'Failed to detect project type. Did you select the build.gradle file of a wpilib project?'), {
         modal: true,
@@ -195,26 +197,27 @@ export class Gradle2020Import extends WebViewBase {
     const gradleFile = path.join(oldProjectPath, 'build.gradle');
 
     let javaRobotPackage: string = '';
-
-    if (await existsAsync(gradleFile) && !cpp) {
-      const gradleContents = await readFileAsync(gradleFile, 'utf8');
-      const mainClassRegex = 'def ROBOT_MAIN_CLASS = "(.+)"';
-      const regexRes = new RegExp(mainClassRegex, 'g').exec(gradleContents);
-      if (regexRes !== null && regexRes.length === 2) {
-        javaRobotPackage = regexRes[1];
-      } else {
-        const res = await vscode.window.showInformationMessage(i18n('message', 'Failed to determine robot class. Enter it manually?'), {
-          modal: true,
-        }, {title: 'Yes'}, {title: 'No', isCloseAffordance: true});
-        if (res?.title !== 'Yes') {
-          await vscode.window.showErrorMessage('Project Import Failed');
-          return;
+    if (!cpp) {
+      try {
+        const gradleContents = await readFile(gradleFile, 'utf8');
+        const mainClassRegex = 'def ROBOT_MAIN_CLASS = "(.+)"';
+        const regexRes = new RegExp(mainClassRegex, 'g').exec(gradleContents);
+        if (regexRes !== null && regexRes.length === 2) {
+          javaRobotPackage = regexRes[1];
         }
+      } catch {
+        // File doesn't exist
       }
-    } else if (!cpp) {
-      const res = await vscode.window.showInformationMessage(i18n('message', 'Failed to determine robot class. Enter it manually?'), {
-        modal: true,
-      }, {title: 'Yes'}, {title: 'No', isCloseAffordance: true});
+    }
+    if (javaRobotPackage === '') {
+      const res = await vscode.window.showInformationMessage(
+        i18n('message', 'Failed to determine robot class. Enter it manually?'),
+        {
+          modal: true,
+        },
+        { title: 'Yes' },
+        { title: 'No', isCloseAffordance: true }
+      );
       if (res?.title !== 'Yes') {
         await vscode.window.showErrorMessage('Project Import Failed');
         return;
@@ -228,7 +231,7 @@ export class Gradle2020Import extends WebViewBase {
     }
 
     try {
-      await mkdirpAsync(toFolder);
+      await mkdir(toFolder, { recursive: true });
     } catch {
       //
     }
@@ -271,9 +274,9 @@ export class Gradle2020Import extends WebViewBase {
 
     const jsonFilePath = path.join(toFolder, '.wpilib', 'wpilib_preferences.json');
 
-    const parsed = JSON.parse(await readFileAsync(jsonFilePath, 'utf8')) as IPreferencesJson;
+    const parsed = JSON.parse(await readFile(jsonFilePath, 'utf8')) as IPreferencesJson;
     parsed.teamNumber = parseInt(data.teamNumber, 10);
-    await writeFileAsync(jsonFilePath, JSON.stringify(parsed, null, 4));
+    await writeFile(jsonFilePath, JSON.stringify(parsed, null, 4));
 
     let replacementFile = path.join(resourceRoot, 'java_replacements.json');
     if (cpp) {

@@ -1,12 +1,12 @@
 'use strict';
 
+import { cp, readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
-const glob = require('glob');
-import { localize as i18n } from '../i18n/locale';
 import { logger } from '../../logger';
-import { ncpAsync, readFileAsync, writeFileAsync } from '../../utilities';
-import { setExecutePermissions } from './permissions';
+import { localize as i18n } from '../i18n/locale';
 import * as pathUtils from './pathUtils';
+import { setExecutePermissions } from './permissions';
+const glob = require('glob');
 
 export type CopyCallback = (srcFolder: string, rootFolder: string) => Promise<boolean>;
 
@@ -57,7 +57,7 @@ export async function processTemplateFiles(
     promiseArray.push(
       (async () => {
         try {
-          const content = await readFileAsync(fullPath, 'utf8');
+          const content = await readFile(fullPath, 'utf8');
           let processedContent = content;
           
           // Apply all replacements
@@ -68,7 +68,7 @@ export async function processTemplateFiles(
             );
           }
           
-          await writeFileAsync(fullPath, processedContent, 'utf8');
+          await writeFile(fullPath, processedContent, 'utf8');
         } catch (error) {
           logger.error(`Error processing template file: ${fullPath}`, error);
           throw error;
@@ -117,7 +117,7 @@ export async function copyTemplateFolder(
 ): Promise<boolean> {
   try {
     if (typeof sourceFolder === 'string') {
-      await ncpAsync(sourceFolder, destinationPath);
+      await cp(sourceFolder, destinationPath, { recursive: true });
     } else {
       // Use the callback for custom copy logic
       await sourceFolder(destinationPath, rootFolder);
@@ -139,18 +139,20 @@ export async function setupProjectStructure(
 ): Promise<boolean> {
   try {
     // Copy gradle files
-    await ncpAsync(fromGradleFolder, toFolder, {
+    await cp(fromGradleFolder, toFolder, {
       filter: (cf) => gradleCopyFilter(cf, fromGradleFolder),
+      recursive: true,
     });
-    
+
     // Copy shared gradle files
-    await ncpAsync(pathUtils.joinPath(grRoot, 'shared'), toFolder, {
+    await cp(pathUtils.joinPath(grRoot, 'shared'), toFolder, {
       filter: (cf) => gradleCopyFilter(cf, fromGradleFolder),
+      recursive: true,
     });
-    
+
     // Set execute permissions on gradlew
     await setExecutePermissions(pathUtils.getGradlewPath(toFolder));
-    
+
     return true;
   } catch (error) {
     logger.error('Failed to setup project structure', error);
@@ -205,7 +207,7 @@ to get a proper path relative to the deploy directory.` :
 function from the 'frc/Filesystem.h' header to get a proper path relative to the deploy
 directory.`;
 
-    await writeFileAsync(
+    await writeFile(
       pathUtils.joinPath(deployDir, 'example.txt'),
       i18n('generator', [hintKey, hintText])
     );
@@ -265,5 +267,5 @@ export async function setupVendorDeps(
  */
 export async function getGradleRioVersion(grRoot: string): Promise<string> {
   const grVersionFile = pathUtils.joinPath(grRoot, 'version.txt');
-  return (await readFileAsync(grVersionFile, 'utf8')).trim();
+  return (await readFile(grVersionFile, 'utf8')).trim();
 }

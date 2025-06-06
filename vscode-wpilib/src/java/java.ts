@@ -1,12 +1,12 @@
 'use strict';
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import { access } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExternalAPI } from 'vscode-wpilibapi';
 import { Examples } from '../utils/project/examples';
 import { Templates } from '../utils/project/templates';
-import { existsAsync } from '../utilities';
 import { onVendorDepsChanged } from '../vendorlibraries';
 import { BuildTest } from './buildtest';
 import { Commands } from './commands';
@@ -60,13 +60,16 @@ export async function activateJava(context: vscode.ExtensionContext, coreExports
         if (prefs.getIsWPILibProject()) {
           const localW = w;
           const buildGradle = path.join(localW.uri.fsPath, 'build.gradle');
-          if (await existsAsync(buildGradle)) {
+          try {
+            await access(buildGradle);
             const buildGradleUri = vscode.Uri.file(buildGradle);
             onVendorDepsChanged(async (workspace) => {
               if (workspace.index === localW.index) {
                 await vscode.commands.executeCommand('java.projectConfiguration.update', buildGradleUri);
               }
             }, null, context.subscriptions);
+          } catch {
+            // Ignore
           }
         }
       }

@@ -1,8 +1,8 @@
 'use strict';
 
 import * as fs from 'fs';
+import { copyFile, mkdir, readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
-import { copyFileAsync, mkdirpAsync, readFileAsync, writeFileAsync } from '../../utilities';
 import { logger } from '../../logger';
 
 /**
@@ -84,9 +84,9 @@ export function getProjectPaths(toFolder: string, copyRoot: string = '', directG
 export async function updateFileContents(filePath: string, 
                                         replacer: (content: string) => string): Promise<boolean> {
   try {
-    const fileContent = await readFileAsync(filePath, 'utf8');
+    const fileContent = await readFile(filePath, 'utf8');
     const updatedContent = replacer(fileContent);
-    await writeFileAsync(filePath, updatedContent, 'utf8');
+    await writeFile(filePath, updatedContent, 'utf8');
     return true;
   } catch (err) {
     logger.error('Failed to update file contents', err);
@@ -99,7 +99,7 @@ export async function updateFileContents(filePath: string,
  */
 export async function ensureDirectory(dirPath: string): Promise<boolean> {
   try {
-    await mkdirpAsync(dirPath);
+    await mkdir(dirPath, { recursive: true });
     return true;
   } catch (err) {
     logger.error(`Failed to create directory: ${dirPath}`, err);
@@ -118,7 +118,7 @@ export async function copyVendorDep(
   try {
     const sourcePath = getVendorDepFilePath(resourcesFolder, vendorDepName);
     const targetPath = joinPath(targetDir, vendorDepName);
-    await copyFileAsync(sourcePath, targetPath);
+    await copyFile(sourcePath, targetPath);
     return true;
   } catch (err) {
     logger.error(`Failed to copy vendor dependency: ${vendorDepName}`, err);

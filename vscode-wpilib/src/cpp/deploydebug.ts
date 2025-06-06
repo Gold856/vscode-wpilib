@@ -1,10 +1,11 @@
 'use strict';
 
+import { readFile } from 'fs/promises';
 import * as jsonc from 'jsonc-parser';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ICodeDeployer, IExecuteAPI, IExternalAPI, IPreferencesAPI } from 'vscode-wpilibapi';
-import { getIsWindows, gradleRun, readFileAsync } from '../utilities';
+import { getIsWindows, gradleRun } from '../utilities';
 import { IDebugCommands, startDebugging } from './debug';
 import { IUnixSimulateCommands, startUnixSimulation } from './simulateunix';
 import { IWindowsSimulateCommands, startWindowsSimulation } from './simulatewindows';
@@ -89,7 +90,7 @@ class DebugCodeDeployer implements ICodeDeployer {
       return false;
     }
 
-    const debugInfo = await readFileAsync(path.join(workspace.uri.fsPath, 'build', 'debug', 'debug_info.json'), 'utf8');
+    const debugInfo = await readFile(path.join(workspace.uri.fsPath, 'build', 'debug', 'debug_info.json'), 'utf8');
     const parsedDebugInfo: ICppDebugInfo[] = jsonc.parse(debugInfo) as ICppDebugInfo[];
     if (parsedDebugInfo.length === 0) {
       await vscode.window.showInformationMessage('No target configurations found. Is this a robot project?', {
@@ -115,7 +116,7 @@ class DebugCodeDeployer implements ICodeDeployer {
 
     const debugPath = targetDebugInfo.path;
 
-    const targetReadInfo = await readFileAsync(debugPath, 'utf8');
+    const targetReadInfo = await readFile(debugPath, 'utf8');
     const targetInfoArray: ICppDebugCommand[] = jsonc.parse(targetReadInfo) as ICppDebugCommand[];
 
     if (targetInfoArray.length === 0) {
@@ -245,7 +246,7 @@ class SimulateCodeDeployer implements ICodeDeployer {
       return false;
     }
 
-    const simulateInfo = await readFileAsync(path.join(workspace.uri.fsPath, 'build', 'sim', 'debug_native.json'), 'utf8');
+    const simulateInfo = await readFile(path.join(workspace.uri.fsPath, 'build', 'sim', 'debug_native.json'), 'utf8');
     const parsedSimulateInfo: ICppSimulateInfo[] = jsonc.parse(simulateInfo) as ICppSimulateInfo[];
     if (parsedSimulateInfo.length === 0) {
       await vscode.window.showInformationMessage('No debug configurations found. Do you have desktop builds enabled?', {

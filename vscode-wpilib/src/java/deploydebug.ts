@@ -1,10 +1,11 @@
 'use strict';
 
+import { readFile } from 'fs/promises';
 import * as jsonc from 'jsonc-parser';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ICodeDeployer, IExecuteAPI, IExternalAPI, IPreferencesAPI } from 'vscode-wpilibapi';
-import { gradleRun, readFileAsync } from '../utilities';
+import { gradleRun } from '../utilities';
 import { IDebugCommands, startDebugging } from './debug';
 import { ISimulateCommands, startSimulation } from './simulate';
 
@@ -81,7 +82,7 @@ class DebugCodeDeployer implements ICodeDeployer {
       return false;
     }
 
-    const debugInfo = await readFileAsync(path.join(workspace.uri.fsPath, 'build', 'debug', 'debug_info.json'), 'utf8');
+    const debugInfo = await readFile(path.join(workspace.uri.fsPath, 'build', 'debug', 'debug_info.json'), 'utf8');
     const parsedDebugInfo: IJavaDebugInfo[] = jsonc.parse(debugInfo) as IJavaDebugInfo[];
     if (parsedDebugInfo.length === 0) {
       await vscode.window.showInformationMessage('No debug configurations found. Is this a robot project?', {
@@ -107,7 +108,7 @@ class DebugCodeDeployer implements ICodeDeployer {
 
     const debugPath = targetDebugInfo.path;
 
-    const targetReadInfo = await readFileAsync(debugPath, 'utf8');
+    const targetReadInfo = await readFile(debugPath, 'utf8');
     const targetInfoArray = jsonc.parse(targetReadInfo) as ITargetInfo[];
 
     if (targetInfoArray.length === 0) {
@@ -216,7 +217,7 @@ class SimulateCodeDeployer implements ICodeDeployer {
       return false;
     }
 
-    const simulateInfo = await readFileAsync(path.join(workspace.uri.fsPath, 'build', 'sim', 'release_java.json'), 'utf8');
+    const simulateInfo = await readFile(path.join(workspace.uri.fsPath, 'build', 'sim', 'release_java.json'), 'utf8');
     const parsedSimulateInfo: IJavaSimulateInfo[] = jsonc.parse(simulateInfo) as IJavaSimulateInfo[];
     if (parsedSimulateInfo.length === 0) {
       await vscode.window.showInformationMessage('No debug configurations found. Do you have desktop builds enabled?', {

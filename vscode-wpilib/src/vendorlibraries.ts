@@ -1,13 +1,13 @@
 'use strict';
 
+import { readdir, unlink } from 'fs/promises';
 import * as vscode from 'vscode';
-import { logger } from './logger';
 import { IExternalAPI } from 'vscode-wpilibapi';
+import { logger } from './logger';
 import { localize as i18n } from './utils/i18n/locale';
-import { IJsonDependency, VendorLibrariesBase } from './utils/project/vendorlibrariesbase';
-import { deleteFileAsync, readdirAsync } from './utilities';
-import { isNewerVersion } from './versions';
 import * as pathUtils from './utils/project/pathUtils';
+import { IJsonDependency, VendorLibrariesBase } from './utils/project/vendorlibrariesbase';
+import { isNewerVersion } from './versions';
 
 class OptionQuickPick implements vscode.QuickPickItem {
   public label: string;
@@ -201,7 +201,7 @@ export class VendorLibraries extends VendorLibrariesBase {
     let anySucceeded = false;
     if (toRemove !== undefined && toRemove.length > 0) {
       const url = this.getWpVendorFolder(workspace);
-      const files = await readdirAsync(url);
+      const files = await readdir(url);
       for (const file of files) {
         const fullPath = pathUtils.joinPath(url, file);
         const result = await this.readFile(fullPath);
@@ -209,7 +209,7 @@ export class VendorLibraries extends VendorLibrariesBase {
           for (const ti of toRemove) {
             if (result.uuid === ti.uuid) {
               try {
-                await deleteFileAsync(fullPath);
+                await unlink(fullPath);
                 anySucceeded = true;
                 // Found and deleted, break from inner loop
                 break;

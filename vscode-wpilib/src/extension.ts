@@ -6,6 +6,7 @@
 // const config = JSON.parse(process.env.VSCODE_NLS_CONFIG as string);
 // const localize = nls.config(config as nls.Options)();
 
+import { access, mkdir } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExternalAPI } from 'vscode-wpilibapi';
@@ -14,11 +15,11 @@ import { BuiltinTools } from './builtintools';
 import { CommandAPI } from './commandapi';
 import { activateCpp } from './cpp/cpp';
 import { ApiProvider } from './cppprovider/apiprovider';
+import { DependencyViewProvider } from './dependencyview/dependencyView';
 import { DeployDebugAPI } from './deploydebugapi';
 import { ExecuteAPI } from './executor';
 import { activateJava } from './java/java';
 import { findJdkPath } from './jdkdetector';
-import { localize as i18n } from './utils/i18n/locale';
 import {
   closeLogger,
   getMainLogFile,
@@ -29,23 +30,21 @@ import { PersistentFolderState } from './persistentState';
 import { Preferences } from './preferences';
 import { PreferencesAPI } from './preferencesapi';
 import { ProjectInfoGatherer } from './projectinfo';
+import { ToolAPI } from './toolapi';
+import {
+  setExtensionContext,
+  setJavaHome
+} from './utilities';
+import { localize as i18n } from './utils/i18n/locale';
 import { ExampleTemplateAPI } from './utils/project/exampletemplateapi';
 import { UtilitiesAPI } from './utils/project/utilitiesapi';
 import { addVendorExamples } from './utils/project/vendorexamples';
-import { ToolAPI } from './toolapi';
-import {
-  existsAsync,
-  mkdirpAsync,
-  setExtensionContext,
-  setJavaHome,
-} from './utilities';
 import { fireVendorDepsChanged, VendorLibraries } from './vendorlibraries';
 import { createVsCommands } from './vscommands';
 import { Gradle2020Import } from './webviews/gradle2020import';
 import { Help } from './webviews/help';
 import { ProjectCreator } from './webviews/projectcreator';
 import { WPILibUpdates } from './wpilibupdates';
-import { DependencyViewProvider } from './dependencyview/dependencyView';
 
 // External API class to implement the IExternalAPI interface
 class ExternalAPI implements IExternalAPI {
@@ -324,9 +323,14 @@ async function handleAfterTrusted(
               didUpdate = await wpilibUpdate.checkForInitialUpdate(w);
             }
 
-            let runBuild: boolean = !(await existsAsync(
-              path.join(w.uri.fsPath, 'build')
-            ));
+            let runBuild: boolean ;
+            try {
+              await access(path.join(w.uri.fsPath, 'build'));
+              runBuild = true;
+            } catch {
+              runBuild = false;
+              // Ignore
+            }
 
             if (didUpdate) {
               const result = await vscode.window.showInformationMessage(
@@ -512,7 +516,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const logPath = path.join(frcHomeDir, 'logs');
   try {
-    await mkdirpAsync(logPath);
+    await mkdir(logPath, { recursive: true });
     setLoggerDirectory(logPath);
   } catch (err) {
     logger.error('Error creating logger', err);
@@ -557,7 +561,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('wpilibcore.showLogFolder', async () => {
       let mainLog = getMainLogFile();
-      if (!(await existsAsync(mainLog))) {
+      if (!(await exists(mainLog))) {
         mainLog = path.dirname(mainLog);
       }
       await vscode.commands.executeCommand(

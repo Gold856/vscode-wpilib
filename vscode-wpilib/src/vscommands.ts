@@ -1,15 +1,16 @@
 'use strict';
 
+import { access } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExternalAPI } from 'vscode-wpilibapi';
 import { downloadDocs } from './docsapi';
-import { localize as i18n } from './utils/i18n/locale';
 import { logger } from './logger';
 import { requestTeamNumber } from './preferences';
-import { setDesktopEnabled } from './utils/project/generator';
 import { ToolAPI } from './toolapi';
-import { existsAsync, getDesktopEnabled, gradleRun, javaHome } from './utilities';
+import { getDesktopEnabled, gradleRun, javaHome } from './utilities';
+import { localize as i18n } from './utils/i18n/locale';
+import { setDesktopEnabled } from './utils/project/generator';
 import { WPILibUpdates } from './wpilibupdates';
 
 interface IUpdatePair {
@@ -437,7 +438,9 @@ export function createVsCommands(context: vscode.ExtensionContext, externalApi: 
 
     const buildgradle = path.join(workspace.uri.fsPath, 'build.gradle');
 
-    if (!await existsAsync(buildgradle)) {
+    try {
+      await access(buildgradle);
+    } catch {
       logger.log('build.gradle not found at: ', buildgradle);
       return;
     }
@@ -468,8 +471,7 @@ export function createVsCommands(context: vscode.ExtensionContext, externalApi: 
     const homeDir = externalApi.getUtilitiesAPI().getWPILibHomeDir();
     if (pick === 'Java') {
       const indexFile = path.join(homeDir, 'documentation', 'java', 'index.html');
-      if (await existsAsync(indexFile)) {
-        await vscode.env.openExternal(vscode.Uri.file(indexFile));
+      if (await vscode.env.openExternal(vscode.Uri.file(indexFile))) {
         return;
       } else {
         try {
@@ -485,7 +487,7 @@ export function createVsCommands(context: vscode.ExtensionContext, externalApi: 
       }
     } else if (pick === 'C++') {
       const indexFile = path.join(homeDir, 'documentation', 'cpp', 'index.html');
-      if (await existsAsync(indexFile)) {
+      if (await exists(indexFile)) {
         await vscode.env.openExternal(vscode.Uri.file(indexFile));
         return;
       } else {

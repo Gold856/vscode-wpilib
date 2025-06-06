@@ -1,8 +1,8 @@
 'use strict';
 
+import { access, mkdir, readdir, readFile, unlink, writeFile } from 'fs/promises';
 import * as fetch from 'node-fetch';
 import { logger } from '../../logger';
-import { deleteFileAsync, existsAsync, mkdirpAsync, readdirAsync, readFileAsync, writeFileAsync } from '../../utilities';
 import { IUtilitiesAPI } from '../../wpilibapishim';
 import * as pathUtils from './pathUtils';
 
@@ -57,33 +57,31 @@ export class VendorLibrariesBase {
 
   public async installDependency(dep: IJsonDependency, url: string, override: boolean): Promise<boolean> {
     try {
-      const dirExists = await existsAsync(url);
-
-      if (!dirExists) {
-        await mkdirpAsync(url);
-        // Directly write file
-        await writeFileAsync(pathUtils.joinPath(url, dep.fileName), JSON.stringify(dep, null, 4));
+      try {
+        await access(url);
+      } catch {
+        // File doesn't exist, directly write file
+        await mkdir(url, { recursive: true });
+        await writeFile(pathUtils.joinPath(url, dep.fileName), JSON.stringify(dep, null, 4));
         return true;
       }
 
-      const files = await readdirAsync(url);
+      const files = await readdir(url);
 
       for (const file of files) {
         const fullPath = pathUtils.joinPath(url, file);
         const result = await this.readFile(fullPath);
-        if (result !== undefined) {
-          if (result.uuid === dep.uuid) {
-            if (override) {
-              await deleteFileAsync(fullPath);
-              break;
-            } else {
-              return false;
-            }
+        if (result !== undefined && result.uuid === dep.uuid) {
+          if (override) {
+            await unlink(fullPath);
+            break;
+          } else {
+            return false;
           }
         }
       }
 
-      await writeFileAsync(pathUtils.joinPath(url, dep.fileName), JSON.stringify(dep, null, 4));
+      await writeFile(pathUtils.joinPath(url, dep.fileName), JSON.stringify(dep, null, 4));
       return true;
     } catch (error) {
       logger.error(`Failed to install dependency ${dep.name}:`, error);
@@ -97,7 +95,7 @@ export class VendorLibrariesBase {
 
   protected async readFile(file: string): Promise<IJsonDependency | undefined> {
     try {
-      const jsonContents = await readFileAsync(file, 'utf8');
+      const jsonContents = await readFile(file, 'utf8');
       const dep = JSON.parse(jsonContents);
 
       if (isJsonDependency(dep)) {
@@ -113,7 +111,7 @@ export class VendorLibrariesBase {
 
   protected async getDependencies(dir: string): Promise<IJsonDependency[]> {
     try {
-      const files = await readdirAsync(dir);
+      const files = await readdir(dir);
 
       const promises: Promise<IJsonDependency | undefined>[] = [];
 

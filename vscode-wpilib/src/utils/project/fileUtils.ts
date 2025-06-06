@@ -1,10 +1,10 @@
 'use strict';
 
 import * as fs from 'fs';
+import { cp, readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { logger } from '../../logger';
-import { ncpAsync, readFileAsync, writeFileAsync } from '../../utilities';
 import * as pathUtils from './pathUtils';
 
 /**
@@ -26,25 +26,29 @@ export async function copyFiles(
   const copiedFiles: string[] = [];
   
   try {
-    await ncpAsync(sourceFolder, destinationFolder, {
+    await cp(sourceFolder, destinationFolder, {
       filter: (filePath: string): boolean => {
         // Track copied files if requested
         if (trackCopiedFiles && fs.lstatSync(filePath).isFile()) {
           copiedFiles.push(path.relative(sourceFolder, filePath));
         }
-        
+
         // Apply custom filter if provided
         if (filter) {
           return filter(filePath);
         }
-        
+
         return true;
       },
+      recursive: true,
     });
-    
+
     return copiedFiles;
   } catch (error) {
-    logger.error(`Error copying files from ${sourceFolder} to ${destinationFolder}:`, error);
+    logger.error(
+      `Error copying files from ${sourceFolder} to ${destinationFolder}:`,
+      error
+    );
     throw error;
   }
 }
@@ -57,7 +61,7 @@ export async function processFileContent(
   replacements: Map<string | RegExp, string>
 ): Promise<void> {
   try {
-    const content = await readFileAsync(filePath, 'utf8');
+    const content = await readFile(filePath, 'utf8');
     let processedContent = content;
     
     // Apply all replacements
@@ -66,7 +70,7 @@ export async function processFileContent(
       processedContent = processedContent.replace(regex, replacement);
     }
     
-    await writeFileAsync(filePath, processedContent, 'utf8');
+    await writeFile(filePath, processedContent, 'utf8');
   } catch (error) {
     logger.error(`Error processing file: ${filePath}`, error);
     throw error;

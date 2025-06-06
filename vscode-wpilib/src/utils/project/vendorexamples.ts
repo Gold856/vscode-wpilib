@@ -1,14 +1,15 @@
 'use strict';
 
+import { readdir, readFile, stat } from 'fs/promises';
 import * as jsonc from 'jsonc-parser';
-import { localize as i18n } from '../i18n/locale';
 import { logger } from '../../logger';
-import { existsAsync, extensionContext, statAsync, readdirAsync, readFileAsync } from '../../utilities';
+import { extensionContext } from '../../utilities';
 import * as vscode from '../../vscodeshim';
 import { IExampleTemplateAPI, IExampleTemplateCreator, IUtilitiesAPI } from '../../wpilibapishim';
+import { localize as i18n } from '../i18n/locale';
 import { generateCopyCpp, generateCopyJava } from './generator';
-import { VendorLibrariesBase } from './vendorlibrariesbase';
 import * as pathUtils from './pathUtils';
+import { VendorLibrariesBase } from './vendorlibrariesbase';
 
 interface IJsonExample {
   name: string;
@@ -43,16 +44,16 @@ export async function addVendorExamples(resourceRoot: string, core: IExampleTemp
   const exampleDir = pathUtils.joinPath(utilities.getWPILibHomeDir(), 'vendorexamples');
   const gradleBasePath = pathUtils.joinPath(resourceRoot, 'gradle');
 
-  if (await existsAsync(exampleDir)) {
-    const files = await readdirAsync(exampleDir);
+  try {
+    const files = await readdir(exampleDir);
     for (const file of files) {
       const filePath = pathUtils.joinPath(exampleDir, file);
-      if ((await statAsync(filePath)).isDirectory()) {
+      if ((await stat(filePath)).isDirectory()) {
         continue;
       }
 
       try {
-        const fileContents = await readFileAsync(filePath, 'utf8');
+        const fileContents = await readFile(filePath, 'utf8');
         const parsed = jsonc.parse(fileContents);
         
         if (Array.isArray(parsed)) {
@@ -137,7 +138,7 @@ export async function addVendorExamples(resourceRoot: string, core: IExampleTemp
         logger.error(`Error processing vendor example file: ${filePath}`, error);
       }
     }
-  } else {
+  } catch {
     logger.log('no vendor examples found', exampleDir);
   }
 }
