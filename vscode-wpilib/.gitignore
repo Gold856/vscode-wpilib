@@ -1,5 +1,4 @@
 out
-i18n
 node_modules
 .vscode-test/
 *.vsix
