@@ -25,13 +25,13 @@ export async function downloadDocs(repoRoot: string, ext: string,  rootFolder: s
 
       const versions = getMavenVersions(metaData);
 
-      const newstVersion = getNewestMavenVersion(versions);
+      const newestVersion = getNewestMavenVersion(versions);
 
-      if (newstVersion === undefined) {
+      if (newestVersion === undefined) {
         throw new Error('No version found');
       }
 
-      const downloadUrl = constructDownloadUrl(metaData, repoRoot, newstVersion, ext);
+      const downloadUrl = constructDownloadUrl(metaData, repoRoot, newestVersion, ext);
       const tmpFolder = path.join(rootFolder, 'tmp');
 
       await mkdirpAsync(tmpFolder);

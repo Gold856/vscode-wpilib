@@ -155,7 +155,7 @@ export class RioConsole extends EventEmitter implements IRioConsole {
     }
     this.connected = true;
     this.emit('connectionChanged', true);
-    console.log('succesfully connected');
+    console.log('successfully connected');
     socket.on('data', (data) => {
       this.handleBuffer(data);
     });
