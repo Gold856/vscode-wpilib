@@ -870,17 +870,6 @@ label.toolbar-button {
   flex: 1;
 }
 
-.select-wrapper::after {
-  content: '▼';
-  font-size: 10px;
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--vscode-foreground);
-}
-
 .project-field-container {
   display: flex;
   flex-direction: column;
