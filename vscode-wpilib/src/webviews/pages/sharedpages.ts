@@ -24,11 +24,15 @@ export function validateProject(): boolean {
 export function validateProjectFolder(): boolean {
   const projectFolder = document.getElementById('projectFolder') as HTMLInputElement;
   const error = document.getElementById('projectFolderError') as HTMLElement;
+  const folderPath = projectFolder.value.trim();
   
-  if (projectFolder.value.trim() === '') {
+  if (folderPath === '' || folderPath.includes('OneDrive')) {
     projectFolder.classList.add('error');
     if (error) {
       error.style.display = 'block';
+      error.innerText = folderPath.includes('OneDrive') 
+        ? window.i18nTrans('ui', 'Invalid Base Folder - Folder can\'t be in OneDrive')
+        : window.i18nTrans('ui', 'Invalid Base Folder');
     }
     return false;
   } else {

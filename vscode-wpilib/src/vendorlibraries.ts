@@ -230,7 +230,7 @@ export class VendorLibraries extends VendorLibrariesBase {
         for (const id of installedDeps) {
           if (id.uuid === ad.uuid) {
             // Maybe update available
-            if (ad.version > id.version) {
+            if (isNewerVersion(ad.version, id.version)) {
               updatableDeps.push(new LibraryQuickPick(ad, id.version));
             }
             break;
