@@ -1,11 +1,11 @@
 'use strict';
 
+import { readFile } from 'fs/promises';
 import * as jsonc from 'jsonc-parser';
-const glob = require('glob');
+import path from 'path';
 import { logger } from '../../logger';
-import { readFileAsync } from '../../utilities';
-import * as pathUtils from './pathUtils';
 import * as fileUtils from './fileUtils';
+const glob = require('glob');
 
 interface IReplaceGroup {
   from: string;
@@ -20,7 +20,7 @@ interface IToUpdate {
 
 export async function ImportUpdate(srcDir: string, updateFile: string): Promise<boolean> {
   try {
-    const toUpdate = await readFileAsync(updateFile, 'utf8');
+    const toUpdate = await readFile(updateFile, 'utf8');
     const toUpdateParsed: IToUpdate[] = jsonc.parse(toUpdate) as IToUpdate[];
 
     // Enumerate through each updater
@@ -51,7 +51,7 @@ export async function ImportUpdate(srcDir: string, updateFile: string): Promise<
       // Process all matched files with the replacements
       await Promise.all(
         toUpdateFiles.map(async (filePath) => {
-          const fullPath = pathUtils.joinPath(srcDir, filePath);
+          const fullPath = path.join(srcDir, filePath);
           try {
             await fileUtils.processFileContent(fullPath, replacements);
           } catch (error) {

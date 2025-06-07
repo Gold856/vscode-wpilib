@@ -1,18 +1,10 @@
 'use strict';
 
 import * as fs from 'fs';
+import { cp, readFile, rename, writeFile } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { logger } from '../../logger';
-import { ncpAsync, readFileAsync, writeFileAsync } from '../../utilities';
-import * as pathUtils from './pathUtils';
-
-/**
- * Filter function for copying files based on file extension
- */
-export interface IFileCopyFilter {
-  (sourcePath: string): boolean;
-}
 
 /**
  * Copy files from source to destination with optional filter
@@ -20,28 +12,29 @@ export interface IFileCopyFilter {
 export async function copyFiles(
   sourceFolder: string,
   destinationFolder: string,
-  filter?: IFileCopyFilter,
+  filter?: (sourcePath: string) => boolean,
   trackCopiedFiles: boolean = false
 ): Promise<string[]> {
   const copiedFiles: string[] = [];
-  
+
   try {
-    await ncpAsync(sourceFolder, destinationFolder, {
+    await cp(sourceFolder, destinationFolder, {
       filter: (filePath: string): boolean => {
         // Track copied files if requested
         if (trackCopiedFiles && fs.lstatSync(filePath).isFile()) {
           copiedFiles.push(path.relative(sourceFolder, filePath));
         }
-        
+
         // Apply custom filter if provided
         if (filter) {
           return filter(filePath);
         }
-        
+
         return true;
       },
+      recursive: true,
     });
-    
+
     return copiedFiles;
   } catch (error) {
     logger.error(`Error copying files from ${sourceFolder} to ${destinationFolder}:`, error);
@@ -57,16 +50,16 @@ export async function processFileContent(
   replacements: Map<string | RegExp, string>
 ): Promise<void> {
   try {
-    const content = await readFileAsync(filePath, 'utf8');
+    const content = await readFile(filePath, 'utf8');
     let processedContent = content;
-    
+
     // Apply all replacements
     for (const [pattern, replacement] of replacements) {
       const regex = pattern instanceof RegExp ? pattern : new RegExp(pattern, 'g');
       processedContent = processedContent.replace(regex, replacement);
     }
-    
-    await writeFileAsync(filePath, processedContent, 'utf8');
+
+    await writeFile(filePath, processedContent, 'utf8');
   } catch (error) {
     logger.error(`Error processing file: ${filePath}`, error);
     throw error;
@@ -83,10 +76,10 @@ export async function processFiles(
 ): Promise<boolean> {
   try {
     const promises = files.map(async (file) => {
-      const fullPath = pathUtils.joinPath(basePath, file);
+      const fullPath = path.join(basePath, file);
       await processFileContent(fullPath, replacements);
     });
-    
+
     await Promise.all(promises);
     return true;
   } catch (error) {
@@ -107,32 +100,29 @@ export async function renameFiles(
 ): Promise<string[]> {
   const renamePromises: Promise<string>[] = [];
   const regex = pattern instanceof RegExp ? pattern : new RegExp(pattern, 'g');
-  
+
   for (const filePath of files) {
-    const fullPath = pathUtils.joinPath(basePath, filePath);
+    const fullPath = path.join(basePath, filePath);
     const filename = path.basename(fullPath);
-    
+
     // Only rename files matching the pattern
     if (filename.match(regex)) {
       const directory = path.dirname(fullPath);
       const newName = filename.replace(regex, replacement);
-      const newPath = pathUtils.joinPath(directory, newName);
-      
-      renamePromises.push(new Promise<string>((resolve, reject) => {
-        fs.rename(fullPath, newPath, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(newPath);
-          }
-        });
-      }));
+      const newPath = path.join(directory, newName);
+
+      renamePromises.push(
+        (async () => {
+          await rename(fullPath, newPath);
+          return newPath;
+        })()
+      );
     }
   }
-  
+
   try {
     const renamedFiles = await Promise.all(renamePromises);
-    
+
     // Open renamed files in editor if requested
     if (openInEditor && renamedFiles.length > 0) {
       for (const file of renamedFiles) {
@@ -144,7 +134,7 @@ export async function renameFiles(
         }
       }
     }
-    
+
     return renamedFiles;
   } catch (error) {
     logger.error('Error renaming files:', error);
@@ -155,12 +145,12 @@ export async function renameFiles(
 /**
  * Filter that only includes specified file extensions
  */
-export function createFileExtensionFilter(extensions: string[]): IFileCopyFilter {
+export function createFileExtensionFilter(extensions: string[]) {
   return (sourcePath: string): boolean => {
     if (!fs.lstatSync(sourcePath).isFile()) {
       return true; // Always include directories
     }
-    
+
     const ext = path.extname(sourcePath).toLowerCase();
     return extensions.includes(ext);
   };
@@ -169,12 +159,12 @@ export function createFileExtensionFilter(extensions: string[]): IFileCopyFilter
 /**
  * Filter that only includes files with specific names
  */
-export function createFileNameFilter(fileNames: string[]): IFileCopyFilter {
+export function createFileNameFilter(fileNames: string[]) {
   return (sourcePath: string): boolean => {
     if (!fs.lstatSync(sourcePath).isFile()) {
       return true; // Always include directories
     }
-    
+
     const basename = path.basename(sourcePath);
     return fileNames.includes(basename);
   };

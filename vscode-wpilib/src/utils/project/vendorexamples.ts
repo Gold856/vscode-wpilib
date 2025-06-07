@@ -1,14 +1,15 @@
 'use strict';
 
+import { readdir, readFile, stat } from 'fs/promises';
 import * as jsonc from 'jsonc-parser';
-import { localize as i18n } from '../i18n/locale';
+import path from 'path';
 import { logger } from '../../logger';
-import { existsAsync, extensionContext, statAsync, readdirAsync, readFileAsync } from '../../utilities';
+import { extensionContext } from '../../utilities';
 import * as vscode from '../../vscodeshim';
 import { IExampleTemplateAPI, IExampleTemplateCreator, IUtilitiesAPI } from '../../wpilibapishim';
+import { localize as i18n } from '../i18n/locale';
 import { generateCopyCpp, generateCopyJava } from './generator';
 import { VendorLibrariesBase } from './vendorlibrariesbase';
-import * as pathUtils from './pathUtils';
 
 interface IJsonExample {
   name: string;
@@ -34,25 +35,25 @@ function isJsonExample(arg: unknown): arg is IJsonExample {
 
 export async function addVendorExamples(resourceRoot: string, core: IExampleTemplateAPI, utilities: IUtilitiesAPI,
                                         vendorlibs: VendorLibrariesBase): Promise<void> {
-  const shimmedResourceRoot = pathUtils.joinPath(resourceRoot, 'vendordeps');
+  const shimmedResourceRoot = path.join(resourceRoot, 'vendordeps');
   const storagePath = extensionContext.storagePath;
   if (storagePath === undefined) {
     return;
   }
 
-  const exampleDir = pathUtils.joinPath(utilities.getWPILibHomeDir(), 'vendorexamples');
-  const gradleBasePath = pathUtils.joinPath(resourceRoot, 'gradle');
+  const exampleDir = path.join(utilities.getWPILibHomeDir(), 'vendorexamples');
+  const gradleBasePath = path.join(resourceRoot, 'gradle');
 
-  if (await existsAsync(exampleDir)) {
-    const files = await readdirAsync(exampleDir);
+  try {
+    const files = await readdir(exampleDir);
     for (const file of files) {
-      const filePath = pathUtils.joinPath(exampleDir, file);
-      if ((await statAsync(filePath)).isDirectory()) {
+      const filePath = path.join(exampleDir, file);
+      if ((await stat(filePath)).isDirectory()) {
         continue;
       }
 
       try {
-        const fileContents = await readFileAsync(filePath, 'utf8');
+        const fileContents = await readFile(filePath, 'utf8');
         const parsed = jsonc.parse(fileContents);
         
         if (Array.isArray(parsed)) {
@@ -76,8 +77,8 @@ export async function addVendorExamples(resourceRoot: string, core: IExampleTemp
                 },
                 async generate(folderInto: vscode.Uri): Promise<boolean> {
                   try {
-                    const exampleFolderPath = pathUtils.joinPath(exampleDir, ex.foldername);
-                    const gradlePath = pathUtils.joinPath(gradleBasePath, ex.gradlebase);
+                    const exampleFolderPath = path.join(exampleDir, ex.foldername);
+                    const gradlePath = path.join(gradleBasePath, ex.gradlebase);
                     
                     if (ex.language === 'java') {
                       if (!await generateCopyJava(
@@ -87,7 +88,7 @@ export async function addVendorExamples(resourceRoot: string, core: IExampleTemp
                         gradlePath, 
                         folderInto.fsPath, 
                         'frc.robot.' + ex.mainclass,
-                        pathUtils.joinPath('frc', 'robot'), 
+                        path.join('frc', 'robot'), 
                         false, 
                         extraVendordeps, 
                         ex.packagetoreplace
@@ -137,7 +138,7 @@ export async function addVendorExamples(resourceRoot: string, core: IExampleTemp
         logger.error(`Error processing vendor example file: ${filePath}`, error);
       }
     }
-  } else {
+  } catch {
     logger.log('no vendor examples found', exampleDir);
   }
 }

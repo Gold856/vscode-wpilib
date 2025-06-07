@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
+import { readFile } from 'fs/promises';
 import * as path from 'path';
-import { readFileAsync } from './utilities';
+import * as vscode from 'vscode';
 
 'use strict';
 
@@ -12,7 +12,7 @@ export class WebviewProvider {
   ): Promise<string> {
     // Get HTML content from file
     const htmlPath = vscode.Uri.file(path.join(extensionUri.fsPath, resourcePath));
-    let html = await readFileAsync(htmlPath.fsPath, 'utf8');
+    let html = await readFile(htmlPath.fsPath, 'utf8');
 
     // Create URIs for scripts and stylesheets
     const cssUri = webview.asWebviewUri(

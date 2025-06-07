@@ -4,10 +4,10 @@
  * This module provides utilities for internationalization and localization.
  */
 
-import * as vscode from 'vscode';
-import * as path from 'path';
 import * as fs from 'fs';
-import { readFileAsync } from '../../utilities';
+import { readFile } from 'fs/promises';
+import * as path from 'path';
+import * as vscode from 'vscode';
 
 // Track loaded locale bundles
 const loadedBundles: { [key: string]: { [key: string]: string } } = {};
@@ -76,7 +76,7 @@ export async function loadLocaleFile(locale: string, domain?: string): Promise<v
     }
     
     if (fs.existsSync(localeFile)) {
-      const content = await readFileAsync(localeFile, 'utf8');
+      const content = await readFile(localeFile, 'utf8');
       loadedBundles[bundleKey] = JSON.parse(content);
     }
   } catch (err) {

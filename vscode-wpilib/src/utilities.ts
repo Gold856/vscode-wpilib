@@ -1,24 +1,19 @@
 'use strict';
-import * as fs from 'fs';
-const mkdirp = require('mkdirp');
-import * as ncp from 'ncp';
+import { readFile } from 'fs/promises';
 import * as path from 'path';
-import * as util from 'util';
 import * as vscode from 'vscode';
 import { IExecuteAPI, IPreferences } from 'vscode-wpilibapi';
 import { localize as i18n } from './utils/i18n/locale';
 import { setExecutePermissions } from './utils/project/permissions';
 
-// General utilites usable by multiple classes
+// General utilities usable by multiple classes
 
 export function getIsWindows(): boolean {
-  const nodePlatform: NodeJS.Platform = process.platform;
-  return nodePlatform === 'win32';
+  return process.platform === 'win32';
 }
 
 export function getIsMac(): boolean {
-  const nodePlatform: NodeJS.Platform = process.platform;
-  return nodePlatform === 'darwin';
+  return process.platform === 'darwin';
 }
 
 export async function getClassName(): Promise<string | undefined> {
@@ -53,45 +48,19 @@ export async function getPackageName(): Promise<string | undefined> {
   return packageName;
 }
 
-export const statAsync = util.promisify(fs.stat);
-
-export const readFileAsync = util.promisify(fs.readFile);
-
-export const writeFileAsync = util.promisify(fs.writeFile);
-
-export const copyFileAsync = util.promisify(fs.copyFile);
-
-export const mkdirAsync = util.promisify(fs.mkdir);
-
-export const existsAsync = util.promisify(fs.exists);
-
-export const deleteFileAsync = util.promisify(fs.unlink);
-
-export const mkdirpAsync = mkdirp;
-
-export function ncpAsync(source: string, dest: string, options: ncp.Options = {}): Promise<void> {
-  return mkdirpAsync(dest).then(() => {
-    return new Promise<void>((resolve, reject) => {
-      ncp.ncp(source, dest, options, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  });
-}
-
-export const readdirAsync = util.promisify(fs.readdir);
-
 export let javaHome: string | undefined;
 export function setJavaHome(jhome: string): void {
   javaHome = jhome;
 }
 
-export async function gradleRun(args: string, rootDir: string, workspace: vscode.WorkspaceFolder,
-                                name: string, executeApi: IExecuteAPI, preferences: IPreferences): Promise<number> {
+export async function gradleRun(
+  args: string,
+  rootDir: string,
+  workspace: vscode.WorkspaceFolder,
+  name: string,
+  executeApi: IExecuteAPI,
+  preferences: IPreferences
+): Promise<number> {
   let command = './gradlew ' + args + ' ' + preferences.getAdditionalGradleArguments();
   if (preferences.getOffline()) {
     command += ' --offline';
@@ -115,28 +84,29 @@ export function setExtensionContext(context: vscode.ExtensionContext): void {
   extensionContext = context;
 }
 
-export function getDesktopEnabled(buildgradle: string): Promise<boolean | undefined> {
-  return new Promise<boolean | undefined>((resolve) => {
-    fs.readFile(buildgradle, 'utf8', (err, dataIn) => {
-      if (err) {
-        resolve(undefined);
-      } else {
-        const dataOut = dataIn.match(/def\s+includeDesktopSupport\s*=\s*(true|false)/m);
-        if (dataOut === null) {
-          resolve(undefined);
-        } else {
-          resolve(dataOut[1] === 'true');
-        }
-      }
-    });
-  });
+export async function getDesktopEnabled(buildgradle: string): Promise<boolean | undefined> {
+  try {
+    const dataIn = await readFile(buildgradle, 'utf8');
+    const dataOut = dataIn.match(/def\s+includeDesktopSupport\s*=\s*(true|false)/m);
+    if (dataOut !== null) {
+      return dataOut[1] === 'true';
+    }
+  } catch {
+    // See return
+  }
+  return undefined;
 }
 
 export async function promptForProjectOpen(toFolder: vscode.Uri): Promise<boolean> {
-  const openSelection = await vscode.window.showInformationMessage(i18n('message',
-      'Project successfully created. Would you like to open the folder?'), {
-    modal: true,
-  }, {title: i18n('ui', 'Yes (Current Window)')}, {title: i18n('ui', 'Yes (New Window)')}, {title: i18n('ui', 'No'), isCloseAffordance: true});
+  const openSelection = await vscode.window.showInformationMessage(
+    i18n('message', 'Project successfully created. Would you like to open the folder?'),
+    {
+      modal: true,
+    },
+    { title: i18n('ui', 'Yes (Current Window)') },
+    { title: i18n('ui', 'Yes (New Window)') },
+    { title: i18n('ui', 'No'), isCloseAffordance: true }
+  );
   if (openSelection === undefined) {
     return true;
   } else if (openSelection.title === i18n('ui', 'Yes (Current Window)')) {
