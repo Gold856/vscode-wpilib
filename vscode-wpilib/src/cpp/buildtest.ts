@@ -85,4 +85,8 @@ export class BuildTest {
     buildTestApi.registerCodeBuild(this.build);
     buildTestApi.registerCodeTest(this.test);
   }
+
+  public dispose() {
+    //
+  }
 }

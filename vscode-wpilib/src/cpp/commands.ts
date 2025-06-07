@@ -166,4 +166,8 @@ export class Commands {
       }
     });
   }
+
+  public dispose() {
+    //
+  }
 }

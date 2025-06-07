@@ -76,4 +76,8 @@ export class Examples {
       }
     });
   }
+
+  public dispose() {
+
+  }
 }

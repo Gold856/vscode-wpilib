@@ -60,6 +60,10 @@ export class ExampleTemplateAPI implements IExampleTemplateAPI {
     return ret;
   }
 
+  public dispose() {
+    //
+  }
+
   public async createProject(template: boolean, language: string, base: string, toFolder: string,
                              newFolder: boolean, projectName: string, teamNumber: number): Promise<boolean> {
     if (template) {
