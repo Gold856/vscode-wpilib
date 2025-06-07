@@ -5,11 +5,7 @@
 
 const gulp = require('gulp');
 
-const ts = require('gulp-typescript');
-const typescript = require('typescript');
-const sourcemaps = require('gulp-sourcemaps');
 const yaml = require('gulp-yaml');
-const jsontransform = require('gulp-json-transform');
 const del = require('del');
 const nls = require('vscode-nls-dev');
 
@@ -18,32 +14,6 @@ const languages = [{
 	id: 'zh-CN'
 }];
 
-const defaultActivationEvents = [
-	"workspaceContains:.wpilib/wpilib_preferences.json",
-	"workspaceContains:build/vscodeconfig.json"
-]
-
-//---- internal
-
-function updateActivationCommands() {
-	return gulp.src(['./package.json'])
-		.pipe(jsontransform((data) => {
-			const activationEvents = [];
-			for (const evnt of defaultActivationEvents) {
-				activationEvents.push(evnt);
-			}
-			for (const cmd of data.contributes.commands) {
-				activationEvents.push(`onCommand:${cmd.command}`);
-			}
-			data.activationEvents = activationEvents;
-			return data;
-		}, 4))
-		.pipe(gulp.dest('./'));
-}
-
-gulp.task('update-activation', () => {
-	return updateActivationCommands();
-});
 
 gulp.task('i18n-compile', function (){
 	return gulp.src('./locale/**/*.yaml')
@@ -58,9 +28,9 @@ gulp.task('i18n-additional', function() {
 });
 
 gulp.task('clean', function() {
-	return del(['package.nls.*.json', 'vscode-wpilib*.vsix']);
+	return del(['package.nls.*.json', 'vscode-wpilib*.vsix', 'out/']);
 })
 
-gulp.task('build', gulp.series('clean', 'i18n-compile', 'i18n-additional', 'update-activation'));
+gulp.task('build', gulp.series('clean', 'i18n-compile', 'i18n-additional'));
 
 gulp.task('default', gulp.series('build'));
