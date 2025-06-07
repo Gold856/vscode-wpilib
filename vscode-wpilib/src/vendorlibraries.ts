@@ -1,11 +1,11 @@
 'use strict';
 
 import { readdir, unlink } from 'fs/promises';
+import path from 'path';
 import * as vscode from 'vscode';
 import { IExternalAPI } from 'vscode-wpilibapi';
 import { logger } from './logger';
 import { localize as i18n } from './utils/i18n/locale';
-import * as pathUtils from './utils/project/pathUtils';
 import { IJsonDependency, VendorLibrariesBase } from './utils/project/vendorlibrariesbase';
 import { isNewerVersion } from './versions';
 
@@ -203,7 +203,7 @@ export class VendorLibraries extends VendorLibrariesBase {
       const url = this.getWpVendorFolder(workspace);
       const files = await readdir(url);
       for (const file of files) {
-        const fullPath = pathUtils.joinPath(url, file);
+        const fullPath = path.join(url, file);
         const result = await this.readFile(fullPath);
         if (result !== undefined) {
           for (const ti of toRemove) {

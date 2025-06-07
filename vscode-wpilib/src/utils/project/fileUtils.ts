@@ -1,18 +1,10 @@
 'use strict';
 
 import * as fs from 'fs';
-import { cp, readFile, writeFile } from 'fs/promises';
+import { cp, readFile, rename, writeFile } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { logger } from '../../logger';
-import * as pathUtils from './pathUtils';
-
-/**
- * Filter function for copying files based on file extension
- */
-export interface IFileCopyFilter {
-  (sourcePath: string): boolean;
-}
 
 /**
  * Copy files from source to destination with optional filter
@@ -20,11 +12,11 @@ export interface IFileCopyFilter {
 export async function copyFiles(
   sourceFolder: string,
   destinationFolder: string,
-  filter?: IFileCopyFilter,
+  filter?: (sourcePath: string) => boolean,
   trackCopiedFiles: boolean = false
 ): Promise<string[]> {
   const copiedFiles: string[] = [];
-  
+
   try {
     await cp(sourceFolder, destinationFolder, {
       filter: (filePath: string): boolean => {
@@ -45,10 +37,7 @@ export async function copyFiles(
 
     return copiedFiles;
   } catch (error) {
-    logger.error(
-      `Error copying files from ${sourceFolder} to ${destinationFolder}:`,
-      error
-    );
+    logger.error(`Error copying files from ${sourceFolder} to ${destinationFolder}:`, error);
     throw error;
   }
 }
@@ -63,13 +52,13 @@ export async function processFileContent(
   try {
     const content = await readFile(filePath, 'utf8');
     let processedContent = content;
-    
+
     // Apply all replacements
     for (const [pattern, replacement] of replacements) {
       const regex = pattern instanceof RegExp ? pattern : new RegExp(pattern, 'g');
       processedContent = processedContent.replace(regex, replacement);
     }
-    
+
     await writeFile(filePath, processedContent, 'utf8');
   } catch (error) {
     logger.error(`Error processing file: ${filePath}`, error);
@@ -87,10 +76,10 @@ export async function processFiles(
 ): Promise<boolean> {
   try {
     const promises = files.map(async (file) => {
-      const fullPath = pathUtils.joinPath(basePath, file);
+      const fullPath = path.join(basePath, file);
       await processFileContent(fullPath, replacements);
     });
-    
+
     await Promise.all(promises);
     return true;
   } catch (error) {
@@ -111,32 +100,29 @@ export async function renameFiles(
 ): Promise<string[]> {
   const renamePromises: Promise<string>[] = [];
   const regex = pattern instanceof RegExp ? pattern : new RegExp(pattern, 'g');
-  
+
   for (const filePath of files) {
-    const fullPath = pathUtils.joinPath(basePath, filePath);
+    const fullPath = path.join(basePath, filePath);
     const filename = path.basename(fullPath);
-    
+
     // Only rename files matching the pattern
     if (filename.match(regex)) {
       const directory = path.dirname(fullPath);
       const newName = filename.replace(regex, replacement);
-      const newPath = pathUtils.joinPath(directory, newName);
-      
-      renamePromises.push(new Promise<string>((resolve, reject) => {
-        fs.rename(fullPath, newPath, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(newPath);
-          }
-        });
-      }));
+      const newPath = path.join(directory, newName);
+
+      renamePromises.push(
+        (async () => {
+          await rename(fullPath, newPath);
+          return newPath;
+        })()
+      );
     }
   }
-  
+
   try {
     const renamedFiles = await Promise.all(renamePromises);
-    
+
     // Open renamed files in editor if requested
     if (openInEditor && renamedFiles.length > 0) {
       for (const file of renamedFiles) {
@@ -148,7 +134,7 @@ export async function renameFiles(
         }
       }
     }
-    
+
     return renamedFiles;
   } catch (error) {
     logger.error('Error renaming files:', error);
@@ -159,12 +145,12 @@ export async function renameFiles(
 /**
  * Filter that only includes specified file extensions
  */
-export function createFileExtensionFilter(extensions: string[]): IFileCopyFilter {
+export function createFileExtensionFilter(extensions: string[]) {
   return (sourcePath: string): boolean => {
     if (!fs.lstatSync(sourcePath).isFile()) {
       return true; // Always include directories
     }
-    
+
     const ext = path.extname(sourcePath).toLowerCase();
     return extensions.includes(ext);
   };
@@ -173,12 +159,12 @@ export function createFileExtensionFilter(extensions: string[]): IFileCopyFilter
 /**
  * Filter that only includes files with specific names
  */
-export function createFileNameFilter(fileNames: string[]): IFileCopyFilter {
+export function createFileNameFilter(fileNames: string[]) {
   return (sourcePath: string): boolean => {
     if (!fs.lstatSync(sourcePath).isFile()) {
       return true; // Always include directories
     }
-    
+
     const basename = path.basename(sourcePath);
     return fileNames.includes(basename);
   };

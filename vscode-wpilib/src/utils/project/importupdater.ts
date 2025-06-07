@@ -2,9 +2,9 @@
 
 import { readFile } from 'fs/promises';
 import * as jsonc from 'jsonc-parser';
+import path from 'path';
 import { logger } from '../../logger';
 import * as fileUtils from './fileUtils';
-import * as pathUtils from './pathUtils';
 const glob = require('glob');
 
 interface IReplaceGroup {
@@ -51,7 +51,7 @@ export async function ImportUpdate(srcDir: string, updateFile: string): Promise<
       // Process all matched files with the replacements
       await Promise.all(
         toUpdateFiles.map(async (filePath) => {
-          const fullPath = pathUtils.joinPath(srcDir, filePath);
+          const fullPath = path.join(srcDir, filePath);
           try {
             await fileUtils.processFileContent(fullPath, replacements);
           } catch (error) {

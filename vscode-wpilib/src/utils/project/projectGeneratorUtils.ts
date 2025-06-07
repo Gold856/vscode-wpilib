@@ -53,7 +53,7 @@ export async function processTemplateFiles(
   const promiseArray: Promise<void>[] = [];
 
   for (const filePath of files) {
-    const fullPath = pathUtils.joinPath(basePath, filePath);
+    const fullPath = path.join(basePath, filePath);
     promiseArray.push(
       (async () => {
         try {
@@ -145,7 +145,7 @@ export async function setupProjectStructure(
     });
 
     // Copy shared gradle files
-    await cp(pathUtils.joinPath(grRoot, 'shared'), toFolder, {
+    await cp(path.join(grRoot, 'shared'), toFolder, {
       filter: (cf) => gradleCopyFilter(cf, fromGradleFolder),
       recursive: true,
     });
@@ -194,7 +194,7 @@ export async function setupDeployDirectory(
       return true;
     }
 
-    const deployDir = pathUtils.joinPath(toFolder, 'src', 'main', 'deploy');
+    const deployDir = path.join(toFolder, 'src', 'main', 'deploy');
     await pathUtils.ensureDirectory(deployDir);
 
     const hintKey = isJava ? 'generateJavaDeployHint' : 'generateCppDeployHint';
@@ -208,7 +208,7 @@ function from the 'frc/Filesystem.h' header to get a proper path relative to the
 directory.`;
 
     await writeFile(
-      pathUtils.joinPath(deployDir, 'example.txt'),
+      path.join(deployDir, 'example.txt'),
       i18n('generator', [hintKey, hintText])
     );
     
@@ -266,6 +266,6 @@ export async function setupVendorDeps(
  * Get the Gradle RIO version from version.txt
  */
 export async function getGradleRioVersion(grRoot: string): Promise<string> {
-  const grVersionFile = pathUtils.joinPath(grRoot, 'version.txt');
+  const grVersionFile = path.join(grRoot, 'version.txt');
   return (await readFile(grVersionFile, 'utf8')).trim();
 }

@@ -2,6 +2,7 @@
 
 import { access, mkdir, readdir, readFile, unlink, writeFile } from 'fs/promises';
 import * as fetch from 'node-fetch';
+import path from 'path';
 import { logger } from '../../logger';
 import { IUtilitiesAPI } from '../../wpilibapishim';
 import * as pathUtils from './pathUtils';
@@ -16,7 +17,7 @@ export interface IJsonDependency {
   requires: IJsonRequires[] | undefined;
 }
 
-export interface  IJsonRequires {
+export interface IJsonRequires {
   uuid: string;
   errorMessage: string;
   offlineFileName: string;
@@ -32,8 +33,12 @@ export interface IJsonConflicts {
 export function isJsonDependency(arg: unknown): arg is IJsonDependency {
   const jsonDep = arg as IJsonDependency;
 
-  return jsonDep.jsonUrl !== undefined && jsonDep.name !== undefined
-         && jsonDep.uuid !== undefined && jsonDep.version !== undefined;
+  return (
+    jsonDep.jsonUrl !== undefined &&
+    jsonDep.name !== undefined &&
+    jsonDep.uuid !== undefined &&
+    jsonDep.version !== undefined
+  );
 }
 
 export class VendorLibrariesBase {
@@ -55,21 +60,25 @@ export class VendorLibrariesBase {
     return pathUtils.getVendorDepsPath(root);
   }
 
-  public async installDependency(dep: IJsonDependency, url: string, override: boolean): Promise<boolean> {
+  public async installDependency(
+    dep: IJsonDependency,
+    url: string,
+    override: boolean
+  ): Promise<boolean> {
     try {
       try {
         await access(url);
       } catch {
         // File doesn't exist, directly write file
         await mkdir(url, { recursive: true });
-        await writeFile(pathUtils.joinPath(url, dep.fileName), JSON.stringify(dep, null, 4));
+        await writeFile(path.join(url, dep.fileName), JSON.stringify(dep, null, 4));
         return true;
       }
 
       const files = await readdir(url);
 
       for (const file of files) {
-        const fullPath = pathUtils.joinPath(url, file);
+        const fullPath = path.join(url, file);
         const result = await this.readFile(fullPath);
         if (result !== undefined && result.uuid === dep.uuid) {
           if (override) {
@@ -81,7 +90,7 @@ export class VendorLibrariesBase {
         }
       }
 
-      await writeFile(pathUtils.joinPath(url, dep.fileName), JSON.stringify(dep, null, 4));
+      await writeFile(path.join(url, dep.fileName), JSON.stringify(dep, null, 4));
       return true;
     } catch (error) {
       logger.error(`Failed to install dependency ${dep.name}:`, error);
@@ -90,7 +99,7 @@ export class VendorLibrariesBase {
   }
 
   public getHomeDirDeps(): Promise<IJsonDependency[]> {
-    return this.getDependencies(pathUtils.joinPath(this.utilities.getWPILibHomeDir(), 'vendordeps'));
+    return this.getDependencies(path.join(this.utilities.getWPILibHomeDir(), 'vendordeps'));
   }
 
   protected async readFile(file: string): Promise<IJsonDependency | undefined> {
@@ -116,7 +125,7 @@ export class VendorLibrariesBase {
       const promises: Promise<IJsonDependency | undefined>[] = [];
 
       for (const file of files) {
-        promises.push(this.readFile(pathUtils.joinPath(dir, file)));
+        promises.push(this.readFile(path.join(dir, file)));
       }
 
       const results = await Promise.all(promises);
@@ -132,15 +141,15 @@ export class VendorLibrariesBase {
       const response = await fetch.default(url, {
         timeout: 5000,
       });
-      
+
       if (response === undefined) {
         throw new Error('Failed to fetch file');
       }
-      
+
       if (response.status >= 200 && response.status <= 300) {
         const text = await response.text();
         const json = JSON.parse(text);
-        
+
         if (isJsonDependency(json)) {
           return json;
         } else {
