@@ -4,7 +4,7 @@ import * as jsonc from 'jsonc-parser';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IPreferences } from 'vscode-wpilibapi';
-import { mkdirAsync } from './utilities';
+import { mkdir } from 'fs/promises';
 import { localize as i18n } from './utils/i18n/locale';
 import { IPreferencesJson } from './utils/project/preferencesjson';
 
@@ -309,7 +309,7 @@ export class Preferences implements IPreferences {
     if (this.preferencesFile === undefined) {
       const configFilePath = Preferences.getPreferencesFilePath(this.workspace.uri.fsPath);
       this.preferencesFile = vscode.Uri.file(configFilePath);
-      await mkdirAsync(path.dirname(this.preferencesFile.fsPath));
+      await mkdir(path.dirname(this.preferencesFile.fsPath), { recursive: true });
     }
     await writeFile(this.preferencesFile.fsPath, JSON.stringify(this.preferencesJson, null, 4));
   }

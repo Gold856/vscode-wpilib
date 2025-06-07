@@ -487,10 +487,11 @@ export function createVsCommands(context: vscode.ExtensionContext, externalApi: 
       }
     } else if (pick === 'C++') {
       const indexFile = path.join(homeDir, 'documentation', 'cpp', 'index.html');
-      if (await exists(indexFile)) {
+      try {
+        await access(indexFile);
         await vscode.env.openExternal(vscode.Uri.file(indexFile));
         return;
-      } else {
+      } catch {
         try {
           const downloadDir = await downloadDocs('https://frcmaven.wpi.edu/artifactory/release/edu/wpi/first/wpilibc/documentation/',
                                                  '.zip', path.join(homeDir, 'documentation'), 'cpp');

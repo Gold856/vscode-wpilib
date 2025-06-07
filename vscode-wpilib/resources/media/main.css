@@ -557,16 +557,13 @@ html {
 }
 
 .error-content {
+  margin-left: 12px;
+}
 
 /* Rules to properly handle error collapsing in RioLog */
 .error-content.collapsed .stack-trace,
 .error-content.collapsed .location-info {
   display: none;
-}
-  margin-left: 12px;
-}
-}
-  margin-left: 12px;
 }
 
 .stack-trace,
@@ -586,6 +583,7 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* File input styling for the log viewer mode */

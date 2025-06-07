@@ -561,7 +561,9 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('wpilibcore.showLogFolder', async () => {
       let mainLog = getMainLogFile();
-      if (!(await exists(mainLog))) {
+      try {
+        await access(mainLog);
+      } catch {
         mainLog = path.dirname(mainLog);
       }
       await vscode.commands.executeCommand(
