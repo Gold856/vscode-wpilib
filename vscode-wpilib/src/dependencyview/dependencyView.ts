@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
-import * as fetch from 'node-fetch';
-import { ProjectInfoGatherer, IProjectInfo } from '../projectinfo';
-import { VendorLibraries } from '../vendorlibraries';
-import { IJsonDependency } from '../utils/project/vendorlibrariesbase';
 import { IExternalAPI } from 'vscode-wpilibapi';
-import { isNewerVersion } from '../versions';
 import { logger } from '../logger';
+import { IProjectInfo, ProjectInfoGatherer } from '../projectinfo';
 import { localize as i18n } from '../utils/i18n/locale';
+import { IJsonDependency } from '../utils/project/vendorlibrariesbase';
+import { VendorLibraries } from '../vendorlibraries';
+import { isNewerVersion } from '../versions';
 
 export interface IJsonList {
   path: string;
@@ -673,8 +672,8 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
   }
 
   protected async loadFileFromUrl(url: string): Promise<IJsonList[]> {
-    const response = await fetch.default(url, {
-      timeout: 5000,
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(5000),
     });
     if (response === undefined) {
       throw new Error('Failed to fetch file');
