@@ -643,7 +643,40 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(disposable);
+  let testSvelteDisposable = vscode.commands.registerCommand(
+    'wpilibcore.showTestSvelte',
+    () => {
+      const panel = vscode.window.createWebviewPanel(
+        'testSvelte',
+        'Test Svelte Component',
+        vscode.ViewColumn.One,
+        {
+          enableScripts: true,
+          retainContextWhenHidden: true
+        }
+      );
+
+      const scriptPath = vscode.Uri.file(
+        path.join(context.extensionPath, 'resources', 'dist', 'testSvelte.js')
+      );
+      const scriptUri = panel.webview.asWebviewUri(scriptPath);
+
+      panel.webview.html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body>
+            <script src="${scriptUri}"></script>
+          </body>
+        </html>
+      `;
+    }
+  );
+
+  context.subscriptions.push(disposable, testSvelteDisposable);
 
   return externalApi;
 }

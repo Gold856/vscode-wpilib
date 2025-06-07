@@ -187,6 +187,11 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
+                "command": "wpilibcore.showTestSvelte",
+                "title": "Show Test Svelte Component",
+                "category": "WPILib"
+            },
+            {
                 "command": "wpilibcore.setTeamNumber",
                 "title": "%wpilibcore.setTeamNumber.title%",
                 "category": "WPILib",
@@ -599,6 +604,9 @@
         "querystring-es3": "^0.2.1",
         "raw-loader": "^4.0.2",
         "stream-browserify": "^3.0.0",
+        "svelte": "^5.0.0-next.272",
+        "svelte-loader": "^3.2.4",
+        "svg-url-loader": "^8.0.0",
         "triple-beam": "^1.4.1",
         "url": "^0.11.4",
         "util": "^0.12.5",

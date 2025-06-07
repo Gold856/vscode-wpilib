@@ -227,9 +227,8 @@ export class WPILibUpdates {
       const files = await readdir(gradleRioPath);
       const versions = [];
       for (const file of files) {
-        const pth = path.join(gradleRioPath, file, `GradleRIO-${file}.pom`);
         try {
-          await access(file);
+          await access(path.join(gradleRioPath, file, `GradleRIO-${file}.pom`));
           versions.push(file);
         } catch {
           // Ignore

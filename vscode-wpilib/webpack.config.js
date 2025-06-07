@@ -10,6 +10,8 @@ module.exports = [
       gradle2020importpage: "./src/webviews/pages/gradle2020importpage.ts",
       projectcreatorpage: "./src/webviews/pages/projectcreatorpage.ts",
       riologpage: ["./src/riolog/sharedscript.ts", "./src/riolog/script/implscript.ts"],
+      testSvelte: "./src/webviews/pages/test-svelte.ts",
+      helpComponent: "./src/webviews/pages/help-svelte.ts"
     },
     devtool: isDevelopment ? 'inline-source-map' : 'source-map',
     module: {
@@ -17,15 +19,48 @@ module.exports = [
         {
           test: /\.ts$/,
           use: "ts-loader",
+          exclude: /node_modules/
         },
         {
           test: /\.js$/,
           include: [/node_modules/],
         },
+        {
+          test: /\.svelte$/,
+          use: {
+            loader: 'svelte-loader',
+            options: {
+              compilerOptions: {
+                dev: isDevelopment
+              },
+              emitCss: false
+            }
+          }
+        },
+        {
+          test: /\.(png|jpg|jpeg|gif)$/i,
+          type: 'asset/resource',
+          generator: {
+            filename: 'assets/[name][ext]'
+          }
+        },
+        {
+          test: /\.svg$/,
+          use: [
+            {
+              loader: 'svg-url-loader',
+              options: {
+                limit: 10000,
+              },
+            },
+          ],
+        }
       ],
     },
     resolve: {
-      extensions: [".ts", ".js"],
+      extensions: [".ts", ".js", ".svelte"],
+      modules: [path.resolve(__dirname, 'src'), 'node_modules'],
+      conditionNames: ['svelte', 'browser', 'import', 'module', 'main'],
       fallback: {
         net: false,
         timers: require.resolve("timers-browserify"),

@@ -38,8 +38,27 @@ export class Help extends WebViewBase {
   }
 
   private async asyncInitialize() {
-    // Load the help.html page with CSS styling
-    const htmlPath = path.join(extensionContext.extensionPath, 'resources', 'webviews', 'help.html');
-    await this.loadWebpage(htmlPath);
+    const scriptPath = vscode.Uri.file(
+      path.join(extensionContext.extensionPath, 'resources', 'dist', 'helpComponent.js')
+    );
+
+    this.html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <script>
+            // Inject VSCode API
+            window.vscode = acquireVsCodeApi();
+          </script>
+          <link rel="stylesheet" href="replaceresource/resources/media/main.css" />
+        </head>
+        <body>
+          <div id="app"></div>
+          <script src="${scriptPath.with({ scheme: 'vscode-resource' })}"></script>
+        </body>
+      </html>
+    `;
   }
 }
