@@ -6,44 +6,6 @@ import * as path from 'path';
 import { logger } from '../../logger';
 
 /**
- * Creates a vendordeps directory path
- */
-export function getVendorDepsPath(baseFolder: string): string {
-  return path.join(baseFolder, 'vendordeps');
-}
-
-/**
- * Creates a deploy directory path
- */
-export function getDeployDirPath(baseFolder: string, directGradleImport: boolean): string {
-  if (directGradleImport) {
-    return '';
-  }
-  return path.join(baseFolder, 'src', 'main', 'deploy');
-}
-
-/**
- * Gets the build.gradle file path
- */
-export function getBuildGradlePath(baseFolder: string): string {
-  return path.join(baseFolder, 'build.gradle');
-}
-
-/**
- * Gets the gradlew script file path
- */
-export function getGradlewPath(baseFolder: string): string {
-  return path.join(baseFolder, 'gradlew');
-}
-
-/**
- * Gets the path to a vendordep file
- */
-export function getVendorDepFilePath(resourcesRoot: string, vendorDepName: string): string {
-  return path.join(path.dirname(resourcesRoot), 'vendordeps', vendorDepName);
-}
-
-/**
  * Creates source and test paths based on project type and import mode
  */
 export function getProjectPaths(
@@ -115,7 +77,7 @@ export async function copyVendorDep(
   targetDir: string
 ): Promise<boolean> {
   try {
-    const sourcePath = getVendorDepFilePath(resourcesFolder, vendorDepName);
+    const sourcePath = path.join(path.dirname(resourcesFolder), 'vendordeps', vendorDepName);
     const targetPath = path.join(targetDir, vendorDepName);
     await copyFile(sourcePath, targetPath);
     return true;

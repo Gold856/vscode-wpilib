@@ -151,7 +151,7 @@ export async function setupProjectStructure(
     });
 
     // Set execute permissions on gradlew
-    await setExecutePermissions(pathUtils.getGradlewPath(toFolder));
+    await setExecutePermissions(path.join(toFolder, 'gradlew'));
 
     return true;
   } catch (error) {
@@ -228,7 +228,7 @@ export async function setupVendorDeps(
   extraVendordeps: string[] = []
 ): Promise<boolean> {
   try {
-    const vendorDir = pathUtils.getVendorDepsPath(toFolder);
+    const vendorDir = path.join(toFolder, 'vendordeps');
     await pathUtils.ensureDirectory(vendorDir);
     
     // Add WPILib New Commands

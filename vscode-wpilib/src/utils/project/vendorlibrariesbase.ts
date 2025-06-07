@@ -5,7 +5,6 @@ import * as fetch from 'node-fetch';
 import path from 'path';
 import { logger } from '../../logger';
 import { IUtilitiesAPI } from '../../wpilibapishim';
-import * as pathUtils from './pathUtils';
 
 export interface IJsonDependency {
   name: string;
@@ -57,7 +56,7 @@ export class VendorLibrariesBase {
   }
 
   public getVendorFolder(root: string): string {
-    return pathUtils.getVendorDepsPath(root);
+    return path.join(root, 'vendordeps');
   }
 
   public async installDependency(

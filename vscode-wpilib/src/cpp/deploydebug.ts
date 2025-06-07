@@ -368,8 +368,4 @@ export class DeployDebug {
       deployDebugApi.registerCodeSimulate(this.simulator);
     }
   }
-
-  public dispose() {
-    //
-  }
 }
