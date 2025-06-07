@@ -1,8 +1,7 @@
+'use strict';
 import { readFile } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
-
-'use strict';
 
 export class WebviewProvider {
   public static async getWebviewContent(

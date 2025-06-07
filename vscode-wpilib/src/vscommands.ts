@@ -473,7 +473,7 @@ export function createVsCommands(context: vscode.ExtensionContext, externalApi: 
       const indexFile = path.join(homeDir, 'documentation', 'java', 'index.html');
       try {
         await access(indexFile);
-        await vscode.env.openExternal(vscode.Uri.file(indexFile)) 
+        await vscode.env.openExternal(vscode.Uri.file(indexFile));
         return;
       } catch {
         try {

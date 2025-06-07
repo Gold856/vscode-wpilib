@@ -613,7 +613,7 @@ export async function activate(context: vscode.ExtensionContext) {
     help
   );
 
-  let testSvelteDisposable = vscode.commands.registerCommand(
+  const testSvelteDisposable = vscode.commands.registerCommand(
     'wpilibcore.showTestSvelte',
     () => {
       const panel = vscode.window.createWebviewPanel(

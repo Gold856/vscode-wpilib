@@ -536,6 +536,7 @@
         "ts-loader": "^9.5.2",
         "ts-node": "^9.1.1",
         "typescript": "^5.8.3",
+        "typescript-eslint": "^8.33.1",
         "vscode-nls-dev": "^4.0.4",
         "webpack": "^5.99.6",
         "webpack-cli": "^6.0.1",

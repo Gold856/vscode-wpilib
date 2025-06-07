@@ -472,7 +472,9 @@ export class VendorLibraries extends VendorLibrariesBase {
         // Deduplicate by uuid
         const seen = new Set<string>();
         const deduped = deps.filter(dep => {
-          if (seen.has(dep.uuid)) return false;
+          if (seen.has(dep.uuid)) {
+            return false;
+          }
           seen.add(dep.uuid);
           return true;
         });
