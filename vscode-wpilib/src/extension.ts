@@ -329,7 +329,6 @@ async function handleAfterTrusted(
               runBuild = true;
             } catch {
               runBuild = false;
-              // Ignore
             }
 
             if (didUpdate) {

@@ -4,7 +4,6 @@
  * This module provides utilities for internationalization and localization.
  */
 
-import * as fs from 'fs';
 import { readFile } from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -65,20 +64,18 @@ export async function loadLocaleFile(locale: string, domain?: string): Promise<v
     if (!extensionPath) {
       return;
     }
-    
+
     const localePath = path.join(extensionPath, 'locale', locale.toLowerCase());
     let localeFile: string;
-    
+
     if (domain) {
       localeFile = path.join(localePath, `${domain}.json`);
     } else {
       localeFile = path.join(localePath, 'package.nls.json');
     }
-    
-    if (fs.existsSync(localeFile)) {
-      const content = await readFile(localeFile, 'utf8');
-      loadedBundles[bundleKey] = JSON.parse(content);
-    }
+
+    const content = await readFile(localeFile, 'utf8');
+    loadedBundles[bundleKey] = JSON.parse(content);
   } catch (err) {
     console.error(`Failed to load locale file for ${locale}`, err);
   }

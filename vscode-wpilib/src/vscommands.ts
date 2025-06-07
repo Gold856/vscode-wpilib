@@ -471,9 +471,11 @@ export function createVsCommands(context: vscode.ExtensionContext, externalApi: 
     const homeDir = externalApi.getUtilitiesAPI().getWPILibHomeDir();
     if (pick === 'Java') {
       const indexFile = path.join(homeDir, 'documentation', 'java', 'index.html');
-      if (await vscode.env.openExternal(vscode.Uri.file(indexFile))) {
+      try {
+        await access(indexFile);
+        await vscode.env.openExternal(vscode.Uri.file(indexFile)) 
         return;
-      } else {
+      } catch {
         try {
           const downloadDir = await downloadDocs('https://frcmaven.wpi.edu/artifactory/release/edu/wpi/first/wpilibj/documentation/',
                                                  '.zip', path.join(homeDir, 'documentation'), 'java');

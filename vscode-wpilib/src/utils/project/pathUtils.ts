@@ -1,7 +1,6 @@
 'use strict';
 
-import * as fs from 'fs';
-import { copyFile, mkdir, readFile, writeFile } from 'fs/promises';
+import { copyFile, mkdir, readdir, readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
 import { logger } from '../../logger';
 
@@ -92,7 +91,7 @@ export async function copyVendorDep(
  */
 export async function isFolderEmpty(folderPath: string): Promise<boolean> {
   try {
-    const files = await fs.promises.readdir(folderPath);
+    const files = await readdir(folderPath);
     return files.length === 0;
   } catch (err) {
     // If folder doesn't exist, we consider it empty
