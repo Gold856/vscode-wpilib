@@ -10,7 +10,6 @@ interface IVersion {
 
 /** Converts a version string to its corresponding Version object. */
 function parseVersion(version: string): IVersion {
-
   const dashIndex = version.indexOf('-');
   const dashParts: string[] = [];
   if (dashIndex >= 0) {
@@ -44,21 +43,11 @@ export function isNewerVersion(version1: IVersion | string, version2: IVersion |
 
   if (version1.version === version2.version) {
     return false;
-  }
-
-  if (version1.major > version2.major) {
+  } else if (version1.major > version2.major) {
     return true;
-  } else if (version1.major < version2.major) {
-    return false;
-  }
-
-  if (version1.minor > version2.minor) {
+  } else if (version1.minor > version2.minor) {
     return true;
-  } else if (version1.minor < version2.minor) {
-    return false;
-  }
-
-  if (version1.patch > version2.patch) {
+  } else if (version1.patch > version2.patch) {
     return true;
   } else if (version1.patch < version2.patch) {
     return false;
