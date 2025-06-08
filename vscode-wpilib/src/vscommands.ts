@@ -43,7 +43,7 @@ async function globalProjectSettingUpdate(message: string): Promise<IUpdatePair 
 
   const result = await vscode.window.showInformationMessage<UpdatePair>(message, {modal: true}, ...opts);
 
-  if (result !== undefined && result.title === i18n('ui', 'Cancel')) {
+  if (result?.title === i18n('ui', 'Cancel')) {
     return undefined;
   }
 

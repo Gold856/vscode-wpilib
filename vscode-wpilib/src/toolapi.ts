@@ -19,7 +19,7 @@ export class ToolAPI implements IToolAPI {
       const result = await vscode.window.showInformationMessage(i18n('message', 'Restart required for new tools. Restart now?'), {
         modal: true,
       }, i18n('ui', 'Yes'), i18n('ui', 'No'));
-      if (result !== undefined && result === i18n('ui', 'Yes')) {
+      if (result === i18n('ui', 'Yes')) {
         vscode.commands.executeCommand('workbench.action.reloadWindow');
       }
     } else {
@@ -41,7 +41,7 @@ export class ToolAPI implements IToolAPI {
     if (this.tools.length <= 0) {
       const grResult = await vscode.window.showInformationMessage(i18n('message', 'No tools found. Would you like to use Gradle to grab some?'),
         {modal: true}, i18n('ui', 'Yes'), i18n('ui', 'No'));
-      if (grResult !== undefined && grResult === i18n('ui', 'Yes')) {
+      if (grResult === i18n('ui', 'Yes')) {
         const preferencesApi = this.externalApi.getPreferencesAPI();
         const workspace = await preferencesApi.getFirstOrSelectedWorkspace();
         if (workspace === undefined) {

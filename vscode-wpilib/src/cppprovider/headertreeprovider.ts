@@ -64,23 +64,27 @@ function stat(pth: string): Promise<fs.Stats> {
 }
 
 export class FileStat implements vscode.FileStat {
-
-  constructor(private fsStat: fs.Stats) { }
+  constructor(private fsStat: fs.Stats) {}
 
   get type(): vscode.FileType {
-    return this.fsStat.isFile() ? vscode.FileType.File : this.fsStat.isDirectory() ? vscode.FileType.Directory :
-      this.fsStat.isSymbolicLink() ? vscode.FileType.SymbolicLink : vscode.FileType.Unknown;
+    return this.fsStat.isFile()
+      ? vscode.FileType.File
+      : this.fsStat.isDirectory()
+      ? vscode.FileType.Directory
+      : this.fsStat.isSymbolicLink()
+      ? vscode.FileType.SymbolicLink
+      : vscode.FileType.Unknown;
   }
 
-  get isFile(): boolean | undefined {
+  get isFile(): boolean {
     return this.fsStat.isFile();
   }
 
-  get isDirectory(): boolean | undefined {
+  get isDirectory(): boolean {
     return this.fsStat.isDirectory();
   }
 
-  get isSymbolicLink(): boolean | undefined {
+  get isSymbolicLink(): boolean {
     return this.fsStat.isSymbolicLink();
   }
 
@@ -154,7 +158,7 @@ export class HeaderTreeProvider implements vscode.TreeDataProvider<Entry> {
   }
 
   private async getChildrenElement(element: Entry): Promise<Entry[]> {
-    if (element.binaryFiles !== undefined) {
+    if (element.binaryFiles) {
       // Root
       const entries: Entry[] = [];
 
@@ -204,26 +208,24 @@ export class HeaderTreeProvider implements vscode.TreeDataProvider<Entry> {
     const currentBinaryTypes = this.enabledBuildTypes;
 
     for (const bin of this.toolchains.binaries) {
-      if (currentBinaryTypes !== undefined) {
-        if (bin.executable === true && currentBinaryTypes.executables === false) {
+      if (currentBinaryTypes) {
+        if (bin.executable && !currentBinaryTypes.executables) {
           continue;
         }
-
-        if (bin.sharedLibrary === true && currentBinaryTypes.sharedLibraries === false) {
+        if (bin.sharedLibrary && !currentBinaryTypes.sharedLibraries) {
           continue;
         }
-
-        if (bin.executable === false && bin.sharedLibrary === false && currentBinaryTypes.staticLibraries === false) {
+        if (!bin.executable && !bin.sharedLibrary && !currentBinaryTypes.staticLibraries) {
           continue;
         }
       }
 
       let exeType = '';
-      if (bin.executable === true) {
+      if (bin.executable) {
         exeType = ' (Exe)';
-      } else if (bin.sharedLibrary === true) {
+      } else if (bin.sharedLibrary) {
         exeType = ' (Shared)';
-      } else if (bin.sharedLibrary !== undefined && bin.executable !== undefined) {
+      } else if (bin.sharedLibrary && bin.executable) {
         exeType = ' (Static)';
       }
 

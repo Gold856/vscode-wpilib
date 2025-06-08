@@ -38,7 +38,7 @@ export class RioConsole extends EventEmitter implements IRioConsole {
 
   public setAutoReconnect(value: boolean): void {
     this.autoReconnect = value;
-    if (value === true) {
+    if (value) {
       this.condition.set();
     }
   }
@@ -61,7 +61,7 @@ export class RioConsole extends EventEmitter implements IRioConsole {
   }
 
   public closeSocket() {
-    if (this.closeFunc !== undefined) {
+    if (this.closeFunc) {
       this.closeFunc();
     }
   }

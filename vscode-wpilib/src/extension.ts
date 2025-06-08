@@ -128,7 +128,7 @@ async function handleAfterTrusted(
 
   let jdkLoc = await findJdkPath(externalApi);
 
-  if (jdkLoc !== undefined) {
+  if (jdkLoc) {
     if (jdkLoc.endsWith('\\') || jdkLoc.endsWith('/')) {
       jdkLoc = jdkLoc.substring(0, jdkLoc.length - 1);
     }
@@ -184,7 +184,7 @@ async function handleAfterTrusted(
   let projectInfo: ProjectInfoGatherer | undefined;
 
   try {
-    if (wpilibUpdate !== undefined && vendorLibs !== undefined) {
+    if (wpilibUpdate && vendorLibs) {
       projectInfo = new ProjectInfoGatherer(
         vendorLibs,
         wpilibUpdate,
@@ -200,7 +200,7 @@ async function handleAfterTrusted(
   let depProvider: DependencyViewProvider | undefined;
 
   try {
-    if (projectInfo !== undefined && vendorLibs !== undefined) {
+    if (projectInfo && vendorLibs) {
       depProvider = new DependencyViewProvider(
         context.extensionUri,
         projectInfo,
@@ -271,7 +271,7 @@ async function handleAfterTrusted(
               false,
               w.uri.fsPath
             );
-            if (importPersistentState.Value === false) {
+            if (!importPersistentState.Value) {
               const upgradeResult = await vscode.window.showInformationMessage(
                 i18n(
                   'message',
@@ -355,7 +355,7 @@ async function handleAfterTrusted(
             false,
             w.uri.fsPath
           );
-          if (persistentState.Value === false) {
+          if (!persistentState.Value) {
             persistentState.Value = true;
             if (help) {
               help.displayHelp();
@@ -368,7 +368,7 @@ async function handleAfterTrusted(
             false,
             w.uri.fsPath
           );
-          if (persistentState.Value === false) {
+          if (!persistentState.Value) {
             // Check if wpilib project might be in a subfolder
             // Only go 1 subfolder deep
             const pattern = new vscode.RelativePattern(
@@ -437,7 +437,7 @@ async function handleAfterTrusted(
                 const picked = await vscode.window.showQuickPick(list, {
                   canPickMany: false,
                 });
-                if (picked !== undefined) {
+                if (picked) {
                   await vscode.commands.executeCommand(
                     'vscode.openFolder',
                     picked.fullFolder,

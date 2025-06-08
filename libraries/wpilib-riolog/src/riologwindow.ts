@@ -30,7 +30,7 @@ export class RioLogWindow {
       return;
     }
     this.webview.on('didDispose', () => {
-      if (this.rioConsole !== undefined) {
+      if (this.rioConsole) {
         this.rioConsole.stop();
         this.rioConsole.removeAllListeners();
       }
@@ -56,7 +56,7 @@ export class RioLogWindow {
   }
 
   public stop() {
-    if (this.webview !== undefined) {
+    if (this.webview) {
       this.webview.dispose();
     }
   }
@@ -81,8 +81,8 @@ export class RioLogWindow {
         message: this.hiddenArray,
         type: SendTypes.Batch,
       });
-      if (this.rioConsole !== undefined) {
-        if (this.rioConsole.connected === true) {
+      if (this.rioConsole) {
+        if (this.rioConsole.connected) {
           await this.webview.postMessage({
             message: true,
             type: SendTypes.ConnectionChanged,
@@ -136,7 +136,7 @@ export class RioLogWindow {
     if (this.webview === undefined) {
       return;
     }
-    if (this.paused === true) {
+    if (this.paused) {
       this.pausedArray.push(message);
       await this.webview.postMessage({
         message: this.pausedArray.length,
@@ -163,7 +163,7 @@ export class RioLogWindow {
     } else if (data.type === ReceiveTypes.Pause) {
       const old = this.paused;
       this.paused = data.message as boolean;
-      if (old === true && this.paused === false) {
+      if (old && !this.paused) {
         await this.sendPaused();
       }
     } else if (data.type === ReceiveTypes.Save) {
@@ -179,7 +179,7 @@ export class RioLogWindow {
     } else if (data.type === ReceiveTypes.Reconnect) {
       const newValue = data.message as boolean;
       this.rioConsole.setAutoReconnect(newValue);
-      if (newValue === false) {
+      if (!newValue) {
         this.rioConsole.disconnect();
       }
     } else if (data.type === ReceiveTypes.ChangeNumber) {

@@ -78,7 +78,7 @@ export class VendorLibrariesBase {
       for (const file of files) {
         const fullPath = path.join(url, file);
         const result = await this.readFile(fullPath);
-        if (result !== undefined && result.uuid === dep.uuid) {
+        if (result && result.uuid === dep.uuid) {
           if (override) {
             await unlink(fullPath);
             break;

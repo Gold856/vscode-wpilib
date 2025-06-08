@@ -14,7 +14,7 @@ export class PromiseCondition<T> {
       this.condSet = (value) => {
         resolve(value);
       };
-      if (this.hasBeenSet === true) {
+      if (this.hasBeenSet) {
         resolve(this.value);
       }
     });
@@ -23,7 +23,7 @@ export class PromiseCondition<T> {
   public set(value: T) {
     this.value = value;
     this.hasBeenSet = true;
-    if (this.condSet !== undefined) {
+    if (this.condSet) {
       this.condSet(value);
     }
   }

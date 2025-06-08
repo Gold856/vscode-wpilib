@@ -421,7 +421,7 @@ function insertMessage(ts: number, line: string, li: HTMLElement, color?: string
       continue;
     }
 
-    if (first === false) {
+    if (!first) {
       contentSpan.appendChild(document.createElement('br'));
     }
     first = false;
@@ -453,7 +453,7 @@ function insertStackTrace(st: string, container: HTMLElement, color?: string) {
     if (item.trim() === '') {
       continue;
     }
-    if (first === false) {
+    if (!first) {
       div.appendChild(document.createElement('br'));
     }
     first = false;
@@ -476,7 +476,7 @@ function insertLocation(loc: string, container: HTMLElement, color?: string) {
     if (item.trim() === '') {
       continue;
     }
-    if (first === false) {
+    if (!first) {
       div.appendChild(document.createElement('br'));
     }
     first = false;

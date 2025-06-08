@@ -104,9 +104,7 @@ export abstract class WebViewBase {
   }
 
   public dispose() {
-    if (this.webview !== undefined) {
-      this.webview.dispose();
-    }
+    this.webview?.dispose();
     for (const d of this.disposables) {
       d.dispose();
     }

@@ -28,7 +28,7 @@ export async function activateCppProvider(context: vscode.ExtensionContext, core
 
         context.subscriptions.push(headerExplorer);
 
-        if (workspaces !== undefined) {
+        if (workspaces) {
             for (const wp of workspaces) {
                 const prefs = coreExports.getPreferencesAPI().getPreferences(wp);
                 if (prefs.getIsWPILibProject() && prefs.getEnableCppIntellisense()) {

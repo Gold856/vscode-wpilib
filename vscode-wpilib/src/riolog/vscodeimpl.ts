@@ -29,7 +29,7 @@ export class RioLogWindowView extends EventEmitter implements IWindowView {
     this.disposables.push(this.webview);
 
     this.webview.onDidChangeViewState((s) => {
-      if (s.webviewPanel.visible === true) {
+      if (s.webviewPanel.visible) {
         this.emit('windowActive');
       }
     }, null, this.disposables);

@@ -62,7 +62,7 @@ export class VendorLibraries extends VendorLibrariesBase {
 
   public async manageVendorLibraries(uri: vscode.Uri | undefined): Promise<void> {
     let workspace: vscode.WorkspaceFolder | undefined;
-    if (uri !== undefined) {
+    if (uri) {
       workspace = vscode.workspace.getWorkspaceFolder(uri);
     }
 
@@ -188,7 +188,7 @@ export class VendorLibraries extends VendorLibrariesBase {
         placeHolder: i18n('message', 'Check to uninstall libraries'),
       });
 
-      if (toRemove !== undefined && toRemove.length > 0) {
+      if (toRemove && toRemove.length > 0) {
         const depsToRemove = toRemove.map(qp => qp.dep);
         await this.uninstallVendorLibraries(depsToRemove, workspace);
       }
@@ -199,13 +199,13 @@ export class VendorLibraries extends VendorLibrariesBase {
 
   public async uninstallVendorLibraries(toRemove: IJsonDependency[] | undefined, workspace: vscode.WorkspaceFolder): Promise<boolean> {
     let anySucceeded = false;
-    if (toRemove !== undefined && toRemove.length > 0) {
+    if (toRemove && toRemove.length > 0) {
       const url = this.getWpVendorFolder(workspace);
       const files = await readdir(url);
       for (const file of files) {
         const fullPath = path.join(url, file);
         const result = await this.readFile(fullPath);
-        if (result !== undefined) {
+        if (result) {
           for (const ti of toRemove) {
             if (result.uuid === ti.uuid) {
               try {
@@ -253,7 +253,7 @@ export class VendorLibraries extends VendorLibrariesBase {
           placeHolder: i18n('message', 'Check to update libraries'),
         });
 
-        if (toUpdate !== undefined && toUpdate.length > 0) {
+        if (toUpdate && toUpdate.length > 0) {
           let anySucceeded = false;
           for (const ti of toUpdate) {
             const success = await this.installDependency(ti.dep, this.getWpVendorFolder(workspace), true);
@@ -311,7 +311,7 @@ export class VendorLibraries extends VendorLibrariesBase {
           placeHolder: i18n('message', 'Check to update libraries'),
         });
 
-        if (toUpdate !== undefined && toUpdate.length > 0) {
+        if (toUpdate && toUpdate.length > 0) {
           let anySucceeded = false;
           for (const ti of toUpdate) {
             const success = await this.installDependency(ti.dep, this.getWpVendorFolder(workspace), true);
@@ -370,7 +370,7 @@ export class VendorLibraries extends VendorLibrariesBase {
         placeHolder: i18n('message', 'Check to install libraries'),
       });
 
-      if (toInstall !== undefined && toInstall.length > 0) {
+      if (toInstall && toInstall.length > 0) {
         let anySucceeded = false;
         for (const ti of toInstall) {
           const success = await this.installDependency(ti.dep, this.getWpVendorFolder(workspace), true);
@@ -461,7 +461,7 @@ export class VendorLibraries extends VendorLibrariesBase {
     // If we have a cached value, return it
     if (this.installedDepsCache.has(cacheKey)) {
       const cachedDeps = this.installedDepsCache.get(cacheKey);
-      if (cachedDeps !== undefined) {
+      if (cachedDeps) {
         return cachedDeps;
       }
     }

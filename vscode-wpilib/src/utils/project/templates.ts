@@ -48,7 +48,7 @@ export class Templates {
           async generate(folderInto: vscode.Uri): Promise<boolean> {
             try {
               let testFolder;
-              if (e.hasunittests === true) {
+              if (e.hasunittests) {
                 testFolder = path.join(templatesTestFolder, e.foldername);
               }
               if (java) {

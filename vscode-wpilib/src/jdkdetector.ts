@@ -89,7 +89,7 @@ export async function findJdkPath(api: IExternalAPI): Promise<string | undefined
 
   // Check for java home
   const javaHome = process.env.JAVA_HOME;
-  if (javaHome !== undefined) {
+  if (javaHome) {
     try {
       const javaVersion = await getJavaVersion(javaHome);
       if (javaVersion >= 17) {
@@ -105,7 +105,7 @@ export async function findJdkPath(api: IExternalAPI): Promise<string | undefined
 
   // Check for jdk home
   const jdkHome = process.env.JDK_HOME;
-  if (jdkHome !== undefined) {
+  if (jdkHome) {
     try {
       const javaVersion = await getJavaVersion(jdkHome);
       if (javaVersion >= 17) {

@@ -47,7 +47,7 @@ export async function startUnixSimulation(commands: IUnixSimulateCommands): Prom
     });
   }
 
-  if (commands.environment !== undefined) {
+  if (commands.environment) {
     for (const envVar of Object.keys(commands.environment)) {
       const value = commands.environment[envVar];
       config.environment.push({
