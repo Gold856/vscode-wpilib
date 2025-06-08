@@ -215,26 +215,7 @@ async function handleAfterTrusted(
         )
       );
 
-      if (depProvider !== undefined) {
-        context.subscriptions.push(
-          vscode.commands.registerCommand('wpilib.addDependency', () => {
-            depProvider?.addDependency();
-          })
-        );
-        context.subscriptions.push(
-          vscode.commands.registerCommand(
-            'wpilib.refreshVendordeps',
-            async () => {
-              await depProvider?.refresh();
-            }
-          )
-        );
-
-        /*         context.subscriptions.push(
-          vscode.commands.registerCommand('wpilib.removeDependency', () => {
-            depProvider?.removeDependency();
-          })) */
-
+      if (depProvider) {
         context.subscriptions.push(
           vscode.commands.registerCommand('wpilib.updateDependencies', () => {
             depProvider?.updateDependencies();
