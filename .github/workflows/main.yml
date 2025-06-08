@@ -17,14 +17,12 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
-      - run: ./gradlew build updateVersions updateAllDependencies generateTemplateZip generateExamplesZip -PbuildServer
+      - run: ./gradlew build updateVersions generateTemplateZip generateExamplesZip -PbuildServer
         name: Build with Gradle
       - run: |
           npm install
           npm run lint
-          npm run unittest
-          npm run gulp
-          npm run webpack
+          npm run test
           npm run vscePackage
         working-directory: vscode-wpilib
         name: Build VSIX
