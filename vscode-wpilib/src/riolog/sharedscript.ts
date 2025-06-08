@@ -1,6 +1,5 @@
 'use strict';
 
-/* tslint:disable:prefer-conditional-expression */
 import { IErrorMessage, IIPCSendMessage, IPrintMessage, MessageType, ReceiveTypes, SendTypes } from 'wpilib-riolog';
 import { AnsiSegment, applyAnsiStyling, parseAnsiString } from './ansi/ansiparser';
 

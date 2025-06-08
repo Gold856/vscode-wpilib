@@ -11,6 +11,5 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
-resources/webviews/tslint.json
 i18n/**/package.i18n.json
 locale/**
