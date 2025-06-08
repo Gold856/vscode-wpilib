@@ -17,7 +17,7 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
-      - run: ./gradlew build updateVersions generateTemplateZip generateExamplesZip -PbuildServer
+      - run: ./gradlew build updateVersions -PbuildServer
         name: Build with Gradle
       - run: |
           npm install

@@ -84,25 +84,11 @@ def downloadXRPVendordep = tasks.register('downloadXRPVendordep', Download) {
   overwrite true
 }
 
-task copyFromVsCodeToStandaloneResources(type: Copy) {
-    dependsOn extractCppDependencies
-    dependsOn extractJavaDependencies
-    dependsOn downloadNewCommands
-    dependsOn downloadRomiVendordep
-    dependsOn downloadXRPVendordep
-    from ('vscode-wpilib/resources/java') {
-        into 'java'
-    }
-    from ('vscode-wpilib/resources/cpp') {
-        into 'cpp'
-    }
-    from ('vscode-wpilib/resources/gradle') {
-        into 'gradle'
-    }
-    from ('vscode-wpilib/resources/vendordeps') {
-        into 'vendordeps'
-    }
-}
+build.dependsOn extractCppDependencies
+build.dependsOn extractJavaDependencies
+build.dependsOn downloadNewCommands
+build.dependsOn downloadRomiVendordep
+build.dependsOn downloadXRPVendordep
 
 apply from: 'templatebuilder.gradle'
 

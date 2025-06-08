@@ -16,7 +16,7 @@ This repository contains the WPILib VS Code extension.
 ## Setting up Dependencies
 In order to properly build, there is some setup that needs to occur.
 1. Go into `vscode-wpilib` and run `npm install`
-2. From the root, run `./gradlew updateAllDependencies`. This will grab the templates and examples from WPILib. This command will need to be reran any time you update the shared dependencies in the vscode project.
+2. From the root, run `./gradlew build`. This will grab the templates and examples from WPILib. This command will need to be reran any time you update the shared dependencies in the vscode project.
 4. Open the root folder in VS Code.
 
 ## Building and Debugging
