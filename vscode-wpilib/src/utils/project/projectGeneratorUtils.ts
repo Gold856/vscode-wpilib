@@ -6,7 +6,7 @@ import { logger } from '../../logger';
 import { localize as i18n } from '../i18n/locale';
 import * as pathUtils from './pathUtils';
 import { setExecutePermissions } from './permissions';
-const glob = require('glob');
+import { glob } from 'glob';
 
 export type CopyCallback = (srcFolder: string, rootFolder: string) => Promise<boolean>;
 
@@ -16,7 +16,7 @@ export type CopyCallback = (srcFolder: string, rootFolder: string) => Promise<bo
 export const ReplacementPatterns = {
   GRADLE_RIO_MARKER: '###GRADLERIOREPLACE###',
   ROBOT_CLASS_MARKER: '###ROBOTCLASSREPLACE###',
-  JAVA_PACKAGE_PATTERN: 'edu\\.wpi\\.first\\.wpilibj\\.(?:examples|templates)\\..+?(?=;|\\.)'
+  JAVA_PACKAGE_PATTERN: 'edu\\.wpi\\.first\\.wpilibj\\.(?:examples|templates)\\..+?(?=;|\\.)',
 };
 
 /**
@@ -25,7 +25,7 @@ export const ReplacementPatterns = {
 export const VendorDepFiles = {
   COMMANDS: 'WPILibNewCommands.json',
   ROMI: 'RomiVendordep.json',
-  XRP: 'XRPVendordep.json'
+  XRP: 'XRPVendordep.json',
 };
 
 /**
@@ -59,15 +59,15 @@ export async function processTemplateFiles(
         try {
           const content = await readFile(fullPath, 'utf8');
           let processedContent = content;
-          
+
           // Apply all replacements
           for (const [pattern, replacement] of replacements) {
             processedContent = processedContent.replace(
-              pattern instanceof RegExp ? pattern : new RegExp(pattern, 'g'), 
+              pattern instanceof RegExp ? pattern : new RegExp(pattern, 'g'),
               replacement
             );
           }
-          
+
           await writeFile(fullPath, processedContent, 'utf8');
         } catch (error) {
           logger.error(`Error processing template file: ${fullPath}`, error);
@@ -92,18 +92,9 @@ export async function findMatchingFiles(
   baseDir: string,
   pattern: string = '**/*{.java,.gradle}'
 ): Promise<string[]> {
-  return new Promise<string[]>((resolve, reject) => {
-    glob(pattern, {
-      cwd: baseDir,
-      nodir: true,
-      nomount: true,
-    }, (err: Error | null, matches: string[]) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(matches);
-      }
-    });
+  return await glob(pattern, {
+    cwd: baseDir,
+    nodir: true,
   });
 }
 
@@ -164,16 +155,12 @@ export async function setupProjectStructure(
  * Update Gradle version in the build.gradle file
  */
 export async function updateGradleRioVersion(
-  buildGradlePath: string, 
+  buildGradlePath: string,
   gradleRioVersion: string
 ): Promise<boolean> {
   try {
-    return await pathUtils.updateFileContents(
-      buildGradlePath,
-      (content) => content.replace(
-        new RegExp(ReplacementPatterns.GRADLE_RIO_MARKER, 'g'), 
-        gradleRioVersion
-      )
+    return await pathUtils.updateFileContents(buildGradlePath, (content) =>
+      content.replace(new RegExp(ReplacementPatterns.GRADLE_RIO_MARKER, 'g'), gradleRioVersion)
     );
   } catch (error) {
     logger.error('Failed to update Gradle RIO version', error);
@@ -185,7 +172,7 @@ export async function updateGradleRioVersion(
  * Setup deploy directory with example text
  */
 export async function setupDeployDirectory(
-  toFolder: string, 
+  toFolder: string,
   directGradleImport: boolean,
   isJava: boolean
 ): Promise<boolean> {
@@ -198,20 +185,17 @@ export async function setupDeployDirectory(
     await pathUtils.ensureDirectory(deployDir);
 
     const hintKey = isJava ? 'generateJavaDeployHint' : 'generateCppDeployHint';
-    const hintText = isJava ?
-      `Files placed in this directory will be deployed to the RoboRIO into the
+    const hintText = isJava
+      ? `Files placed in this directory will be deployed to the RoboRIO into the
 'deploy' directory in the home folder. Use the 'Filesystem.getDeployDirectory' wpilib function
-to get a proper path relative to the deploy directory.` :
-      `Files placed in this directory will be deployed to the RoboRIO into the
+to get a proper path relative to the deploy directory.`
+      : `Files placed in this directory will be deployed to the RoboRIO into the
 'deploy' directory in the home folder. Use the 'frc::filesystem::GetDeployDirectory'
 function from the 'frc/Filesystem.h' header to get a proper path relative to the deploy
 directory.`;
 
-    await writeFile(
-      path.join(deployDir, 'example.txt'),
-      i18n('generator', [hintKey, hintText])
-    );
-    
+    await writeFile(path.join(deployDir, 'example.txt'), i18n('generator', [hintKey, hintText]));
+
     return true;
   } catch (error) {
     logger.error('Failed to setup deploy directory', error);
@@ -230,31 +214,19 @@ export async function setupVendorDeps(
   try {
     const vendorDir = path.join(toFolder, 'vendordeps');
     await pathUtils.ensureDirectory(vendorDir);
-    
+
     // Add WPILib New Commands
-    await pathUtils.copyVendorDep(
-      resourcesFolder,
-      VendorDepFiles.COMMANDS,
-      vendorDir
-    );
-    
+    await pathUtils.copyVendorDep(resourcesFolder, VendorDepFiles.COMMANDS, vendorDir);
+
     // Add extra vendordeps
     for (const vendordep of extraVendordeps) {
       if (vendordep === 'romi') {
-        await pathUtils.copyVendorDep(
-          resourcesFolder,
-          VendorDepFiles.ROMI,
-          vendorDir
-        );
+        await pathUtils.copyVendorDep(resourcesFolder, VendorDepFiles.ROMI, vendorDir);
       } else if (vendordep === 'xrp') {
-        await pathUtils.copyVendorDep(
-          resourcesFolder,
-          VendorDepFiles.XRP,
-          vendorDir
-        );
+        await pathUtils.copyVendorDep(resourcesFolder, VendorDepFiles.XRP, vendorDir);
       }
     }
-    
+
     return true;
   } catch (error) {
     logger.error('Failed to setup vendordeps', error);

@@ -5,7 +5,7 @@ import * as jsonc from 'jsonc-parser';
 import path from 'path';
 import { logger } from '../../logger';
 import * as fileUtils from './fileUtils';
-const glob = require('glob');
+import { glob } from 'glob';
 
 interface IReplaceGroup {
   from: string;
@@ -26,23 +26,14 @@ export async function ImportUpdate(srcDir: string, updateFile: string): Promise<
     // Enumerate through each updater
     for (const updater of toUpdateParsed) {
       // Find files matching the pattern
-      const toUpdateFiles = await new Promise<string[]>((resolve, reject) => {
-        glob(updater.fileMatcher, {
-          cwd: srcDir,
-          nodir: true,
-          nomount: true,
-        }, (err: Error | null, matches: string[]) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(matches);
-          }
-        });
+      const toUpdateFiles = await glob(updater.fileMatcher, {
+        cwd: srcDir,
+        nodir: true,
       });
 
       // Create replacements map
       const replacements = new Map<string | RegExp, string>();
-      
+
       // Add all replacements from the updater config
       for (const replace of updater.replacements) {
         replacements.set(new RegExp(replace.from, updater.flags), replace.to);
@@ -61,10 +52,11 @@ export async function ImportUpdate(srcDir: string, updateFile: string): Promise<
         })
       );
     }
-    
+
     return true;
   } catch (error) {
     logger.error('Failed to update project files', error);
     return false;
   }
 }
+
