@@ -78,9 +78,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
       ],
     };
 
-    this.wp = await this.externalApi
-      .getPreferencesAPI()
-      .getFirstOrSelectedWorkspace();
+    this.wp = await this.externalApi.getPreferencesAPI().getFirstOrSelectedWorkspace();
     if (this.wp === undefined) {
       logger.warn('no workspace');
       return;
@@ -96,8 +94,12 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>WPILib Vendor Dependencies</title>
-            <link rel="stylesheet" href="${webviewView.webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'media', 'main.css'))}">
-            <link rel="stylesheet" href="${webviewView.webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'media', 'icons.css'))}" id="vscode-codicon-stylesheet">
+            <link rel="stylesheet" href="${webviewView.webview.asWebviewUri(
+              vscode.Uri.joinPath(this._extensionUri, 'resources', 'media', 'main.css')
+            )}">
+            <link rel="stylesheet" href="${webviewView.webview.asWebviewUri(
+              vscode.Uri.joinPath(this._extensionUri, 'resources', 'media', 'icons.css')
+            )}" id="vscode-codicon-stylesheet">
           </head>
           <body>
             <div class="error-content" style="max-width: 500px; margin: 48px auto; text-align: center;">
@@ -164,9 +166,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
           case 'blur': {
             if (this.wp) {
               if (this.changed > this.vendorLibraries.getLastBuild()) {
-                this.externalApi
-                  .getBuildTestAPI()
-                  .buildCode(this.wp, undefined);
+                this.externalApi.getBuildTestAPI().buildCode(this.wp, undefined);
                 this.changed = 0;
               }
             }
@@ -193,9 +193,9 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
       const versionToInstall =
         version === this.installedList[index].currentVersion
           ? // Get the version of the first element of the array AKA the latest version
-          this.installedList[index].versionInfo[0].version
+            this.installedList[index].versionInfo[0].version
           : // It isn't the current version so user must have specified something else
-          version;
+            version;
 
       // Match both the name and the version
       const avail = this.availableDeps.find(
@@ -211,10 +211,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
   private async updateall() {
     if (this.wp) {
       for (const installed of this.installedList) {
-        if (
-          installed.versionInfo[0].version !== installed.currentVersion &&
-          this.wp
-        ) {
+        if (installed.versionInfo[0].version !== installed.currentVersion && this.wp) {
           // Match both the name and the version
           const avail = this.availableDeps.find(
             (available) =>
@@ -241,10 +238,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
     this.sortInstalledDeps();
     const uninstall = [this.installedDeps[parseInt(index, 10)]];
     if (this.wp) {
-      const success = await this.vendorLibraries.uninstallVendorLibraries(
-        uninstall,
-        this.wp
-      );
+      const success = await this.vendorLibraries.uninstallVendorLibraries(uninstall, this.wp);
       if (success) {
         this.changed = Date.now();
       }
@@ -261,11 +255,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
         if (dep.conflictsWith) {
           // Check to see if it conflicts with currently installed deps
           for (const conflict of dep.conflictsWith) {
-            if (
-              this.installedDeps.find(
-                (installedDep) => installedDep.uuid === conflict.uuid
-              )
-            ) {
+            if (this.installedDeps.find((installedDep) => installedDep.uuid === conflict.uuid)) {
               conflictdep = conflict;
               break;
             }
@@ -310,10 +300,9 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
             }
           }
         } else {
-          vscode.window.showErrorMessage(
-            i18n('message', '{0}', conflictdep.errorMessage),
-            { modal: true }
-          );
+          vscode.window.showErrorMessage(i18n('message', '{0}', conflictdep.errorMessage), {
+            modal: true,
+          });
         }
       }
     }
@@ -331,8 +320,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
         dependency = await this.vendorLibraries.getJsonDepURL(url);
       } catch {
         dependency = this.homeDeps.find(
-          (homdep) =>
-            homdep.uuid === avail.uuid && homdep.version === avail.version
+          (homdep) => homdep.uuid === avail.uuid && homdep.version === avail.version
         );
       }
     }
@@ -345,15 +333,16 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
    */
   private async installFromUrl(url: string | undefined) {
     if (!url || !this.wp) {
-      logger.warn('installFromUrl called with invalid parameters', { url, hasWorkspace: !!this.wp });
+      logger.warn('installFromUrl called with invalid parameters', {
+        url,
+        hasWorkspace: !!this.wp,
+      });
       return;
     }
 
     // Validate URL format
     if (!url.trim()) {
-      vscode.window.showErrorMessage(
-        i18n('message', 'Please enter a valid URL')
-      );
+      vscode.window.showErrorMessage(i18n('message', 'Please enter a valid URL'));
       return;
     }
 
@@ -362,9 +351,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
       const file = await this.vendorLibraries.getJsonDepURL(url.trim());
 
       if (!file) {
-        vscode.window.showErrorMessage(
-          i18n('message', 'Failed to load vendor file from URL.')
-        );
+        vscode.window.showErrorMessage(i18n('message', 'Failed to load vendor file from URL.'));
         return;
       }
 
@@ -381,11 +368,15 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
             return;
           } else {
             const res = await vscode.window.showWarningMessage(
-              i18n('message',
+              i18n(
+                'message',
                 '{0} version {1} is already installed. Would you like to update to {2}?',
-                file.name, dep.version, file.version), 
-              { modal: true }, 
-              i18n('ui', 'Yes'), 
+                file.name,
+                dep.version,
+                file.version
+              ),
+              { modal: true },
+              i18n('ui', 'Yes'),
               i18n('ui', 'No')
             );
             if (res !== i18n('ui', 'Yes')) {
@@ -399,9 +390,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
       let conflictDep = undefined;
       if (file.conflictsWith) {
         for (const conflict of file.conflictsWith) {
-          const existingDep = existing.find(
-            (installedDep) => installedDep.uuid === conflict.uuid
-          );
+          const existingDep = existing.find((installedDep) => installedDep.uuid === conflict.uuid);
           if (existingDep) {
             conflictDep = conflict;
             break;
@@ -432,7 +421,11 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
                 );
               } catch (err) {
                 vscode.window.showWarningMessage(
-                  i18n('message', 'Failed to install required dependency: {0}', required.errorMessage)
+                  i18n(
+                    'message',
+                    'Failed to install required dependency: {0}',
+                    required.errorMessage
+                  )
                 );
               }
             }
@@ -441,22 +434,17 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
           // Refresh the view to show the newly installed dependency
           await this._refresh(this.wp);
         } else {
-          vscode.window.showErrorMessage(
-            i18n('message', 'Failed to install {0}', file.name)
-          );
+          vscode.window.showErrorMessage(i18n('message', 'Failed to install {0}', file.name));
         }
       } else {
         // Show conflict error
-        vscode.window.showErrorMessage(
-          i18n('message', '{0}', conflictDep.errorMessage),
-          { modal: true }
-        );
+        vscode.window.showErrorMessage(i18n('message', '{0}', conflictDep.errorMessage), {
+          modal: true,
+        });
       }
     } catch (err) {
       // Error handling matches the command palette version
-      vscode.window.showErrorMessage(
-        i18n('message', 'Failed to load vendor file from URL.')
-      );
+      vscode.window.showErrorMessage(i18n('message', 'Failed to load vendor file from URL.'));
     }
   }
 
@@ -491,8 +479,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
     this.refreshInProgress = true;
 
     try {
-      this.installedDeps =
-        await this.vendorLibraries.getCurrentlyInstalledLibraries(workspace);
+      this.installedDeps = await this.vendorLibraries.getCurrentlyInstalledLibraries(workspace);
       this.installedList = [];
       this.availableDepsList = [];
 
@@ -501,9 +488,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
         // Check Github for the VendorDep list
         if (this.installedDeps.length !== 0) {
           for (const id of this.installedDeps) {
-            let versionList = [
-              { version: id.version, buttonText: i18n('ui', 'To Latest') },
-            ];
+            let versionList = [{ version: id.version, buttonText: i18n('ui', 'To Latest') }];
             for (const ad of this.availableDeps) {
               if (id.uuid === ad.uuid) {
                 // Populate version array with version and button text
@@ -536,23 +521,14 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
         // We need to group the available deps and filter out the installed ones
         this.availableDeps.forEach((dep) => {
           // See if the dep is one of the installed deps if so don't add it
-          const installedDep = this.installedDeps.findIndex(
-            (depend) => depend.uuid === dep.uuid
-          );
+          const installedDep = this.installedDeps.findIndex((depend) => depend.uuid === dep.uuid);
           if (installedDep < 0) {
             // Check to see if it is already in the available list
-            const foundDep = this.availableDepsList.findIndex(
-              (depend) => depend.uuid === dep.uuid
-            );
+            const foundDep = this.availableDepsList.findIndex((depend) => depend.uuid === dep.uuid);
             if (foundDep < 0) {
               // Not in the list so just add it
               this.availableDepsList.push(dep);
-            } else if (
-              isNewerVersion(
-                dep.version,
-                this.availableDepsList[foundDep].version
-              )
-            ) {
+            } else if (isNewerVersion(dep.version, this.availableDepsList[foundDep].version)) {
               // It was in the list but this version is newer so lets use that
               this.availableDepsList[foundDep] = dep;
             }
@@ -639,11 +615,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
       try {
         this.onlineDeps = await this.loadFileFromUrl(manifestURL);
       } catch (err) {
-        logger.log(
-          'Error fetching vendordep marketplace manifest',
-          manifestURL,
-          err
-        );
+        logger.log('Error fetching vendordep marketplace manifest', manifestURL, err);
         this.onlineDeps = [];
       }
     }
@@ -659,9 +631,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
         instructions: i18n('ui', 'Loaded from Local Copy'),
       };
       const found = this.onlineDeps.find(
-        (onlinedep) =>
-          onlinedep.uuid === depList.uuid &&
-          onlinedep.version === depList.version
+        (onlinedep) => onlinedep.uuid === depList.uuid && onlinedep.version === depList.version
       );
       if (!found) {
         this.onlineDeps.push(depList);
@@ -679,7 +649,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
       throw new Error('Failed to fetch file');
     }
     if (response.ok) {
-      const json = await response.json() as IJsonList[];
+      const json = (await response.json()) as IJsonList[];
       if (this.isJsonList(json)) {
         return json;
       } else {
@@ -706,9 +676,7 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
   private _getHtmlForWebview(webview: vscode.Webview): string {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
     const createUri = (fp: string) => {
-      return webview.asWebviewUri(
-        vscode.Uri.joinPath(this._extensionUri, ...fp.split('/'))
-      );
+      return webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, ...fp.split('/')));
     };
 
     const scriptUri = createUri(`resources/media/main.js`);
@@ -885,3 +853,4 @@ export class DependencyViewProvider implements vscode.WebviewViewProvider {
   `;
   }
 }
+

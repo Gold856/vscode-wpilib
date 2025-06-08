@@ -325,16 +325,11 @@ html {
 
 .vscode-collapsible .actions {
   align-items: center;
-  display: none;
   height: 22px;
   margin-left: auto;
   margin-right: 4px;
 }
 
-.vscode-collapsible.always-show-actions[open] summary .actions,
-.vscode-collapsible[open]:hover summary .actions {
-  display: flex;
-}
 
 .vscode-badge {
   background-color: var(--vscode-badge-background);
