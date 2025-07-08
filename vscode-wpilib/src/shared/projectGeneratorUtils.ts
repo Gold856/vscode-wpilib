@@ -2,7 +2,7 @@
 
 import * as path from 'path';
 const glob = require('glob');
-import { localize as i18n } from '../utils/l10n/locale';
+import { localize as i18n } from '../locale';
 import { logger } from '../logger';
 import { mkdirpAsync, ncpAsync, readFileAsync, writeFileAsync } from '../utilities';
 import { setExecutePermissions } from './permissions';

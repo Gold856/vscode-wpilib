@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { logger } from '../logger';
 import { IExampleTemplateAPI, IExampleTemplateCreator } from '../api';
-import { localize as i18n } from '../utils/l10n/locale';
+import { localize as i18n } from '../locale';
 import { generateCopyCpp, generateCopyJava } from './generator';
 
 export interface IExampleJsonLayout {

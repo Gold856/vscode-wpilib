@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExternalAPI } from '../api';
 import { activateCppProvider } from '../cppprovider/cppprovider';
-import { localize as i18n } from '../utils/l10n/locale';
+import { localize as i18n } from '../locale';
 import { Examples } from '../shared/examples';
 import { Templates } from '../shared/templates';
 import { BuildTest } from './buildtest';

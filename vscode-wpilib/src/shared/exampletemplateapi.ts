@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ICreatorQuickPick, IExampleTemplateAPI, IExampleTemplateCreator } from '../api';
 import { mkdirpAsync, readFileAsync, writeFileAsync } from '../utilities';
-import { localize as i18n } from '../utils/l10n/locale';
+import { localize as i18n } from '../locale';
 import { IPreferencesJson } from './preferencesjson';
 
 export class ExampleTemplateAPI implements IExampleTemplateAPI {

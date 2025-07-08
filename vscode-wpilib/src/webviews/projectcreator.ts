@@ -3,7 +3,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { extensionContext, promptForProjectOpen } from '../utilities';
-import { localize as i18n } from '../utils/l10n/locale';
+import { localize as i18n } from '../locale';
 import { setDesktopEnabled } from '../shared/generator';
 import { IExampleTemplateAPI } from '../api';
 import {

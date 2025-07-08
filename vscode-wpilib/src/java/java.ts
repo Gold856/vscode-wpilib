@@ -11,7 +11,7 @@ import { onVendorDepsChanged } from '../vendorlibraries';
 import { BuildTest } from './buildtest';
 import { Commands } from './commands';
 import { DeployDebug } from './deploydebug';
-import { localize as i18n } from '../utils/l10n/locale';
+import { localize as i18n } from '../locale';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
