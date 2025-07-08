@@ -35,7 +35,7 @@ import { Gradle2025Import } from './webviews/gradle2025import';
 import { Help } from './webviews/help';
 import { ProjectCreator } from './webviews/projectcreator';
 import { WPILibUpdates } from './wpilibupdates';
-import { DependencyViewProvider } from './dependencyview/dependencyView';
+import { DependencyViewProvider } from './dependencyView';
 
 // External API class to implement the IExternalAPI interface
 class ExternalAPI implements IExternalAPI {
