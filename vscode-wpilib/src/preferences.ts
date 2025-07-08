@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IPreferences } from './api';
 import { localize as i18n } from './utils/l10n/locale';
-import { IPreferencesJson } from './utils/project/preferencesjson';
+import { IPreferencesJson } from './shared/preferencesjson';
 import { existsAsync, mkdirAsync, readFileAsync, writeFileAsync } from './utilities';
 
 const defaultPreferences: IPreferencesJson = {
